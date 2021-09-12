@@ -143,8 +143,8 @@ a.sourceLine {
     <section id="main-content">
 <div id="questions-1" class="section level2">
 <h2>Questions 1</h2>
-<p>** 1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [<a href="https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/" class="uri">https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/</a>], provide code that identifies the majors that contain either “DATA” or “STATISTICS” **</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>majorsList <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;/Users/dsimbandumwe/dev/cuny/data_606/538/data/college-majors/majors-list.csv&quot;</span>)</span>
+<p><strong>1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [<a href="https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/" class="uri">https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/</a>], provide code that identifies the majors that contain either “DATA” or “STATISTICS”</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>majorsList <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv&quot;</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>id <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">grep</span>(<span class="st">&quot;DATA&quot;</span>, majorsList<span class="sc">$</span>Major),<span class="fu">grep</span>(<span class="st">&quot;STATISTICS&quot;</span>, majorsList<span class="sc">$</span>Major))</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -164,12 +164,12 @@ a.sourceLine {
 </div>
 <div id="questions-2" class="section level2">
 <h2>Questions 2</h2>
-<p>** 2 Write code that transforms the data below:</p>
+<p>**2 Write code that transforms the data below:</p>
 <p>[1] “bell pepper” “bilberry” “blackberry” “blood orange” [5] “blueberry” “cantaloupe” “chili pepper” “cloudberry”<br />
 [9] “elderberry” “lime” “lychee” “mulberry”<br />
 [13] “olive” “salal berry”</p>
 <p>Into a format like this:</p>
-<p>c(“bell pepper”, “bilberry”, “blackberry”, “blood orange”, “blueberry”, “cantaloupe”, “chili pepper”, “cloudberry”, “elderberry”, “lime”, “lychee”, “mulberry”, “olive”, “salal berry”) **</p>
+<p>c(“bell pepper”, “bilberry”, “blackberry”, “blood orange”, “blueberry”, “cantaloupe”, “chili pepper”, “cloudberry”, “elderberry”, “lime”, “lychee”, “mulberry”, “olive”, “salal berry”)**</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="st">&#39;[1] &quot;bell pepper&quot;  &quot;bilberry&quot;     &quot;blackberry&quot;   &quot;blood orange&quot;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="st">[5] &quot;blueberry&quot;    &quot;cantaloupe&quot;   &quot;chili pepper&quot; &quot;cloudberry&quot;  </span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="st">[9] &quot;elderberry&quot;   &quot;lime&quot;         &quot;lychee&quot;       &quot;mulberry&quot;    </span></span>
@@ -181,25 +181,13 @@ a.sourceLine {
 ## [9] &quot;elderberry&quot;   &quot;lime&quot;         &quot;lychee&quot;       &quot;mulberry&quot;    
 ## [13] &quot;olive&quot;        &quot;salal berry&quot;</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;[</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">]]&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
-<pre><code>## 1 &quot;bell pepper&quot;  &quot;bilberry&quot;     &quot;blackberry&quot;   &quot;blood orange&quot;
-## 5 &quot;blueberry&quot;    &quot;cantaloupe&quot;   &quot;chili pepper&quot; &quot;cloudberry&quot;  
-## 9 &quot;elderberry&quot;   &quot;lime&quot;         &quot;lychee&quot;       &quot;mulberry&quot;    
-## 13 &quot;olive&quot;        &quot;salal berry&quot;</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;[</span><span class="sc">\\</span><span class="st">n]&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
-<pre><code>## 1 &quot;bell pepper&quot;  &quot;bilberry&quot;     &quot;blackberry&quot;   &quot;blood orange&quot;5 &quot;blueberry&quot;    &quot;cantaloupe&quot;   &quot;chili pepper&quot; &quot;cloudberry&quot;  9 &quot;elderberry&quot;   &quot;lime&quot;         &quot;lychee&quot;       &quot;mulberry&quot;    13 &quot;olive&quot;        &quot;salal berry&quot;</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;[</span><span class="sc">\\</span><span class="st">d]&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
-<pre><code>##  &quot;bell pepper&quot;  &quot;bilberry&quot;     &quot;blackberry&quot;   &quot;blood orange&quot; &quot;blueberry&quot;    &quot;cantaloupe&quot;   &quot;chili pepper&quot; &quot;cloudberry&quot;   &quot;elderberry&quot;   &quot;lime&quot;         &quot;lychee&quot;       &quot;mulberry&quot;     &quot;olive&quot;        &quot;salal berry&quot;</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;</span><span class="sc">\\</span><span class="st">s&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
-<pre><code>## &quot;bellpepper&quot;&quot;bilberry&quot;&quot;blackberry&quot;&quot;bloodorange&quot;&quot;blueberry&quot;&quot;cantaloupe&quot;&quot;chilipepper&quot;&quot;cloudberry&quot;&quot;elderberry&quot;&quot;lime&quot;&quot;lychee&quot;&quot;mulberry&quot;&quot;olive&quot;&quot;salalberry&quot;</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&#39;&quot;&quot;&#39;</span>,<span class="st">&#39;&quot;,&quot;&#39;</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
-<pre><code>## &quot;bellpepper&quot;,&quot;bilberry&quot;,&quot;blackberry&quot;,&quot;bloodorange&quot;,&quot;blueberry&quot;,&quot;cantaloupe&quot;,&quot;chilipepper&quot;,&quot;cloudberry&quot;,&quot;elderberry&quot;,&quot;lime&quot;,&quot;lychee&quot;,&quot;mulberry&quot;,&quot;olive&quot;,&quot;salalberry&quot;</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_c</span>(<span class="st">&quot;c(&quot;</span>,str,<span class="st">&quot;)&quot;</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;[</span><span class="sc">\\</span><span class="st">n]&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;[</span><span class="sc">\\</span><span class="st">d]&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&quot;</span><span class="sc">\\</span><span class="st">s&quot;</span>,<span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(str,<span class="st">&#39;&quot;&quot;&#39;</span>,<span class="st">&#39;&quot;,&quot;&#39;</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>str <span class="ot">&lt;-</span> <span class="fu">str_c</span>(<span class="st">&quot;c(&quot;</span>,str,<span class="st">&quot;)&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(str)</span></code></pre></div>
 <pre><code>## c(&quot;bellpepper&quot;,&quot;bilberry&quot;,&quot;blackberry&quot;,&quot;bloodorange&quot;,&quot;blueberry&quot;,&quot;cantaloupe&quot;,&quot;chilipepper&quot;,&quot;cloudberry&quot;,&quot;elderberry&quot;,&quot;lime&quot;,&quot;lychee&quot;,&quot;mulberry&quot;,&quot;olive&quot;,&quot;salalberry&quot;)</code></pre>
 </div>
 <div id="question-3" class="section level2">
@@ -220,7 +208,7 @@ a.sourceLine {
 <p>**- &quot;^(.)(.).*\1\2$&quot;**</p>
 <p>Contain one letter repeated in at least three places (e.g. “eleven” contains three “e”s.)</p>
 <p><strong>- “(.).+\1.+\1”</strong></p>
-<p>This document is available at <a href="https://rpubs.com/">[<strong>RPubs</strong>]</a> and on [[<strong>Github</strong>]] (<a href="https://rpubs.com/dsimbandumwe/807980" class="uri">https://rpubs.com/dsimbandumwe/807980</a>)</p>
+<p>This document is available at <a href="https://rpubs.com/dsimbandumwe/807980">[<strong>RPubs</strong>]</a> and on <a href="https://github.com/dsimband/DATA607/blob/4603e72a1ed3e5759430888d398bb2db440e27a6/Homework/DATA607_w3_DataProcessing.Rmd">[<strong>Github</strong>]</a></p>
 </div>
     </section>
   </div>
