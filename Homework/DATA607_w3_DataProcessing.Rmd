@@ -6,6 +6,7 @@ output:
   prettydoc::html_pretty:
     theme: architect
     highlight: github
+    
 ---
 
 
@@ -26,7 +27,7 @@ library(stringr)
   
 ```{r}
 
-majorsList <- read.csv("/Users/dsimbandumwe/dev/cuny/data_606/538/data/college-majors/majors-list.csv")
+majorsList <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv")
 
 id = c(grep("DATA", majorsList$Major),grep("STATISTICS", majorsList$Major))
 
@@ -109,4 +110,4 @@ Contain one letter repeated in at least three places (e.g. "eleven" contains thr
   
   
 This document is available at [[**RPubs**]](https://rpubs.com/dsimbandumwe/807980)
-and on [[**Github**]] (https://rpubs.com/dsimbandumwe/807980)
+and on [[**Github**]](https://github.com/dsimband/DATA607/blob/4603e72a1ed3e5759430888d398bb2db440e27a6/Homework/DATA607_w3_DataProcessing.Rmd)
