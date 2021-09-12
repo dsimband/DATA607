@@ -1,12 +1,10 @@
 ---
-title: "DATA607 Week 3 Assignement: R Character Manipulation and Date Processing "
+title: 'DATA607 Week 3 Assignement: R Character Manipulation and Date Processing '
 author: "David Simbandumwe"
 date: "11 September 2021"
 output:
-  prettydoc::html_pretty:
-    theme: architect
-    highlight: github
-    
+  html_document:
+    df_print: paged
 ---
 
 
