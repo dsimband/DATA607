@@ -1,0 +1,112 @@
+---
+title: "DATA607 Week 3 Assignement: R Character Manipulation and Date Processing "
+author: "David Simbandumwe"
+date: "11 September 2021"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(stringr)
+```
+
+
+
+
+
+## Questions 1
+
+**1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"**
+
+  
+```{r}
+
+majorsList <- read.csv("/Users/dsimbandumwe/dev/cuny/data_606/538/data/college-majors/majors-list.csv")
+
+id = c(grep("DATA", majorsList$Major),grep("STATISTICS", majorsList$Major))
+
+majorsList <- majorsList %>%
+    mutate(search_flag = FALSE)
+majorsList[id,4] = TRUE
+
+filter(majorsList, search_flag == TRUE)
+
+```
+  
+  
+  
+## Questions 2
+
+**2 Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+[13] "olive"        "salal berry"
+
+
+Into a format like this:
+
+c("bell pepper", "bilberry", "blackberry", "blood orange", "blueberry", "cantaloupe", "chili pepper", "cloudberry", "elderberry", "lime", "lychee", "mulberry", "olive", "salal berry")**
+
+  
+```{r}
+
+str <- '[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+[13] "olive"        "salal berry"'
+
+writeLines(str)
+
+str <- str_replace_all(str,"[\\[\\]]","")
+str <- str_replace_all(str,"[\\n]","")
+str <- str_replace_all(str,"[\\d]","")
+str <- str_replace_all(str,"\\s","")
+str <- str_replace_all(str,'""','","')
+
+str <- str_c("c(",str,")")
+writeLines(str)
+
+
+```
+
+
+## Question 3
+  
+**3 Describe, in words, what these expressions will match:**
+
+**(.)\1\1**                 - (xxx) this will match to any string with 3 repeating characters 
+
+**"(.)(.)\\2\\1"**          - (xyyx) this will match to a string that follows this patter, 1st(x) char, 2 instances of the 2nd char(yy), followed by the 1st character (x)
+
+**(..)\1 **                 - (xyxy) this will match to a sting that follows the pattern 1st character = 3rd character and 2nd char = th character
+
+**"(.).\\1.\\1"**           - (xyxxx) this will match to a sting that follows the pattern 1st character = 3rd through 5th charter
+
+**"(.)(.)(.).*\\3\\2\\1" **     - (xyz\*zyx) this will match to a string that follows that pattern 3 characters, followed by one or more other characters, followed by 3rd character, the 2nd character and the 3rd character
+
+ 
+## Question 4
+**4 Construct regular expressions to match words that:**
+
+Start and end with the same character. 
+
+**- "^(.).*\\1$"**
+
+Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+
+**- "^(.)(.).*\\1\\2$"**
+
+Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+ 
+**- "(.).+\\1.+\\1"** 
+  
+  
+This document is available at [[**RPubs**]](https://rpubs.com/dsimbandumwe/807980)
+and on [[**Github**]] (https://rpubs.com/dsimbandumwe/807980)
