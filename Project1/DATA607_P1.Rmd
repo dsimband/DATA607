@@ -36,23 +36,16 @@ The chess rating system (invented by a Minnesota statistician named Arpad Elo) h
 
 ```{r, }
 
-eloTxt <- readtext("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt")
-
-e2 <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
+eloTxt <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
            character(0), 
            quote = NULL,
            sep = "\n")
-e2
 
 
 
 
+```
 
-e3 <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
-           character(0), 
-           quote = NULL,
-           sep = "|")
-e3
 
 
 
@@ -60,191 +53,14 @@ e3
 
 
 
-df <- data.frame(matrix(ncol = 5, nrow = 0))
-x <- c("name", "state", "total_points","pre_rating","post_rating")
-colnames(df) <- x
 
 
-df <- data.frame( name = character(),
-                  state = character(),
-                  total_points = double(),
-                  pre_rating = double(),
-                  post_rating = double()
-)
 
-for (i in 4:13) {
-  if (!str_detect(e2[i],"\\-") ) {
-    
-    g <- e2[i] %>% str_split("\\|", simplify = TRUE) 
-    g1 <- str_squish(e2[i+1]) %>% str_split(" ", simplify = TRUE) 
-    
-    df %>% add_row(
-      name = str_trim(g[2]),
-      state = str_trim(g1[1]),
-      total_points = as.numeric(g[3]),
-      pre_rating = as.numeric(g1[6]),
-      post_rating = as.numeric(str_replace(g1[7],"->",""))
-    )
-  }
-}
 
 
+```{r, }
 
-
-
-
-i = 26
-while (i < length(e3)){
-  print(e3[i])
-  i = i+23
-}
-
-
-for (i in 1:length(e2)) {
-
-  print(e2[i])
-}
-
-
-
-
-for (i in 1:13) {
-  g <- e2[i] %>% str_split("\\|")
-  print(g)
-}
-
-for (i in 4:length(e2)) {
-  if (!str_detect(e2[i],"\\-") ) {
-    g <- e2[i] %>% str_split("\\|", simplify = TRUE) 
-    print(str_trim(g[2]))
-    print(as.numeric(g[3]))
-    
-    g1 <- str_squish(e2[i+1]) %>% str_split(" ", simplify = TRUE) 
-    print(g1[6])
-    print(as.numeric(g1[6]))
-    print(g1[7])
-    print(as.numeric(str_replace(g1[7],"->","")))
-    
-    
-  }
-}
-
-
-
-for (i in 4:length(e2)) {
-  if (!str_detect(e2[i],"\\-") ) {
-    g <- e2[i] %>% str_split("\\|", simplify = TRUE) 
-    #print(str_trim(g[2]))
-    #print(as.numeric(g[3]))
-    
-    g1 <- str_squish(e2[i+1]) %>% 
-      #str_replace("->"," -> ") %>%
-      str_split(" ", simplify = TRUE) 
-    
-    if (is.numeric(g1[6])) {
-       print(as.numeric(g1[6]))
-    }
-    else {
-      print(g1[6] %>% str_split("->", simplify = TRUE) )
-    }
-   
-  }
-}
-
-
-
-n1 <- regex("
-  \\R:     # R
-  [:digit:]     # number
-  ", comments = TRUE)
-
-
-for (i in 4:length(e2)) {
-  if (!str_detect(e2[i],"\\-") ) {
-    
-    print(str_extract_all(e2[i+1],n1))
-
-    
-    #rindex <- str_locate(e2[i+1],"R:")
-    #print(rindex[2])
-    
-    #pindex <- str_locate(e2[i+1],"->")
-    #print(pindex[2])
-    
-    #print(str_subset(e2[i+1], "R:") )
-    
-    g <- e2[i] %>% str_split("\\|", simplify = TRUE) 
-    #print(str_trim(g[2]))
-    #print(as.numeric(g[3]))
-    
-    g1 <- str_squish(e2[i+1]) %>% 
-      #str_replace("->"," -> ") %>%
-      str_split(" ", simplify = TRUE) 
-    
-    if (is.numeric(g1[6])) {
-       #print(as.numeric(g1[6]))
-    }
-    else {
-      #print(g1[6] %>% str_split("->", simplify = TRUE) )
-    }
-   
-  }
-}
-
-
-
-
-?str_squish
-
-s1 <- str_squish(" R: 13131243 -> 13142341")
-s1
-
-
-
-s1 <-    "  MI | 15619130 / R: 1220P13->1416P20  |N:3  |B    |B    |W    |W    |B    |B    |W    |"
-s1 <- gsub(" ","",s1)
-stateTmp <- str_extract(s1,"[:alpha:]." )
-preTmp <- str_extract(s1,"R:\\d..." )
-preTmp <- str_extract(preTmp,"\\d+" )
-postTmp <- str_extract(postTmp,">\\d..." )
-postTmp <- str_extract(postTmp,"\\d+" )
-
-
-
-
-
-
-
-
-
-
-
-
-
-gsub(" ", "", "R: 13131243 ->    13142341    ")
-
-?print
-
-fields <- c("Name: Hadley", "Country: NZ", "Age: 35")
-fields %>% str_split(": ", simplify = TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# create the empty data frame
 
 df <- data.frame( name = character(),
                   state = character(),
@@ -254,20 +70,18 @@ df <- data.frame( name = character(),
 )
 
 
-
-e2 <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
-           character(0), 
-           quote = NULL,
-           sep = "\n")
+# initialize the loop counter
+i <- 4
 
 
-for (i in 4:length(e2)) {
-  if (!str_detect(e2[i],"\\-") ) {
+while (i < length(eloTxt)) {
+  if (!str_detect(eloTxt[i],"\\--") ) {
     
-    g <- e2[i] %>% str_split("\\|", simplify = TRUE) 
+    g <- eloTxt[i] %>% str_split("\\|", simplify = TRUE) 
     #g1 <- str_squish(e2[i+1]) %>% str_split(" ", simplify = TRUE) 
     
-    g1 <- gsub(" ","",e2[i+1])
+    i <- i + 1
+    g1 <- gsub(" ","",eloTxt[i])
     stateTmp <- str_extract(g1,"[:alpha:]." )
     preTmp <- str_extract(g1,"R:\\d..." )
     preTmp <- str_extract(preTmp,"\\d+" )
@@ -282,19 +96,28 @@ for (i in 4:length(e2)) {
       pre_rating = as.numeric(preTmp),
       post_rating = as.numeric(postTmp)
     )
-    
-    
-
-    
-    
-    
   }
+  i <- i + 1
 }
 
 
-
-
+# write the results out to disk
+write.csv(df, "./tournamentinfo.csv", row.names=TRUE)
 
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
