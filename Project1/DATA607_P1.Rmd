@@ -77,10 +77,12 @@ i <- 4
 while (i < length(eloTxt)) {
   if (!str_detect(eloTxt[i],"\\--") ) {
     
-    g <- eloTxt[i] %>% str_split("\\|", simplify = TRUE) 
-    #g1 <- str_squish(e2[i+1]) %>% str_split(" ", simplify = TRUE) 
+    g <- eloTxt[i] %>% str_split("\\|", simplify = TRUE)
+    nameTmp <- g[2]
+    scoreTmp <- str_extract(eloTxt[i],"\\d.\\d" )
     
     i <- i + 1
+    
     g1 <- gsub(" ","",eloTxt[i])
     stateTmp <- str_extract(g1,"[:alpha:]." )
     preTmp <- str_extract(g1,"R:\\d..." )
@@ -90,9 +92,9 @@ while (i < length(eloTxt)) {
     
 
     df <- df %>% add_row(
-      name = str_trim(g[2]),
+      name = str_trim(nameTmp),
       state = str_trim(stateTmp),
-      total_points = as.numeric(g[3]),
+      total_points = as.numeric(scoreTmp),
       pre_rating = as.numeric(preTmp),
       post_rating = as.numeric(postTmp)
     )
