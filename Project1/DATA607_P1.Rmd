@@ -4,8 +4,8 @@ author: "David Simbandumwe"
 output:
   html_document:
     includes:
-      in_header: ../../assets/header.html
-    css: ../../assets/mtheme_max.css
+      in_header: header.html
+    css: lab.css
     highlight: pygments
     theme: cerulean
     toc: true
@@ -24,19 +24,22 @@ library(readtext)
 
 
 #Summary
-In this project, you’re given a text file with chess tournament results where the information has some structure. Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players:
-Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of Opponents
-For the first player, the information would be:
-Gary Hua, ON, 6.0, 1794, 1605
-1605 was calculated by using the pre-tournament opponents’ ratings of 1436, 1563, 1600, 1610, 1649, 1663, 1716, and dividing by the total number of games played.
-If you have questions about the meaning of the data or the results, please post them on the discussion forum. Data science, like chess, is a game of back and forth...
-The chess rating system (invented by a Minnesota statistician named Arpad Elo) has been used in many other contexts, including assessing relative strength of employment candidates by human resource departments.
+This project starts with a text file of chess tournament results. This file is processed to develop an R Markown file that generates a .CSV file that includes:
++ Player’s Name, 
++ Player’s State, 
++ Total Number of Points, 
++ Player’s Pre-Rating, 
++ Average Pre Chess Rating of Opponent
 
 
+The first step in the process is to load the raw text file from github.
 
-```{r, }
+```{r, read file}
 
-eloTxt <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
+#eloTxt <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
+
+# read in text file split the file by new line
+eloTxt <- scan("/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamentinfo.txt",
            character(0), 
            quote = NULL,
            sep = "\n")
@@ -53,33 +56,49 @@ eloTxt <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1
 
 
 
+Process the data from the text file into a structued data frame
++ create the data frame
++ split the file into individual lines
++ loop through each record - each record is represented by 3 lines in the text file
++ extract the data from each row that will fill the data frame records
 
 
-
-
-
-```{r, }
+```{r, process text file}
 
 # create the empty data frame
-
-df <- data.frame( name = character(),
+df <- data.frame( id = double(),
+                  name = character(),
                   state = character(),
                   total_points = double(),
                   pre_rating = double(),
-                  post_rating = double()
+                  post_rating = double(),
+                  r1 = double(),
+                  r2 = double(),
+                  r3 = double(),
+                  r4 = double(),
+                  r5 = double(),
+                  r6 = double(),
+                  r7 = double(),
+                  total_rating = double(),
+                  num_games = double(),
+                  avg_rating = double()
 )
+
 
 
 # initialize the loop counter
 i <- 4
 
 
+# loop through each line and process each 3 line record
 while (i < length(eloTxt)) {
   if (!str_detect(eloTxt[i],"\\--") ) {
     
+    # extract key data elements
     g <- eloTxt[i] %>% str_split("\\|", simplify = TRUE)
     nameTmp <- g[2]
     scoreTmp <- str_extract(eloTxt[i],"\\d.\\d" )
+    idTmp <- g[1]
     
     i <- i + 1
     
@@ -90,21 +109,41 @@ while (i < length(eloTxt)) {
     postTmp <- str_extract(g1,">\\d..." )
     postTmp <- str_extract(postTmp,"\\d+" )    
     
-
+    b <- str_locate(g1,"\\d.\\d")[1]
+    s1 <- str_sub(g, b , str_length(g1)) %>% str_split("\\|", simplify = TRUE) 
+    
+    # extract competitor records
+    pIDvec <- c()
+    x = 4
+    while ( x < 11) {
+      pID <- str_extract(s1[x],"\\d+")
+      pIDvec <- append(pIDvec, as.numeric(pID))
+      x <- x + 1
+    }
+    
+    # write to dataframe
     df <- df %>% add_row(
+      id = as.numeric(idTmp),
       name = str_trim(nameTmp),
       state = str_trim(stateTmp),
       total_points = as.numeric(scoreTmp),
       pre_rating = as.numeric(preTmp),
-      post_rating = as.numeric(postTmp)
+      post_rating = as.numeric(postTmp),
+      r1 = pIDvec[1],
+      r2 = pIDvec[2],
+      r3 = pIDvec[3],
+      r4 = pIDvec[4],
+      r5 = pIDvec[5],
+      r6 = pIDvec[6],
+      r7 = pIDvec[7],
     )
   }
   i <- i + 1
 }
 
 
-# write the results out to disk
-write.csv(df, "./tournamentinfo.csv", row.names=TRUE)
+
+
 
 
 ```
@@ -114,6 +153,69 @@ write.csv(df, "./tournamentinfo.csv", row.names=TRUE)
 
 
 
+
+Calculate the average scores for opponents. The reverence to other records requires a completed dataframe before we can calcuate the competitor scores. 
+
+```{r, }
+
+#calculate average score with NA guards
+for (i in 1:nrow(df)) {
+  x <- 0
+  num <- 0
+  if (!is.na(df[df[i,"r1"],"pre_rating"])) { 
+    x <- x + df[df[i,"r1"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r2"],"pre_rating"])) { 
+    x <- x + df[df[i,"r2"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r3"],"pre_rating"])) { 
+    x <- x + df[df[i,"r3"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r4"],"pre_rating"])) {
+    x <- x + df[df[i,"r4"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r5"],"pre_rating"])) { 
+    x <- x + df[df[i,"r5"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r6"],"pre_rating"])) { 
+    x <- x + df[df[i,"r6"],"pre_rating"] 
+    num <- num + 1
+  }
+  if (!is.na(df[df[i,"r7"],"pre_rating"])) { 
+    x <- x + df[df[i,"r7"],"pre_rating"] 
+    num <- num + 1
+  }
+  
+  #write data to df
+  df[i,"total_rating"] <- x
+  df[i,"num_games"] <- num
+  df[i,"avg_rating"] <- x/num
+
+  
+}
+
+```
+
+
+
+
+
+
+
+
+Final step in the process is to write the data to a file. 
+
+```{r, }
+
+# write the results out to disk
+write.csv(df, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamentinfo.csv", row.names=TRUE)
+
+```
 
 
 
