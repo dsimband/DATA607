@@ -1,5 +1,5 @@
 ---
-title: "DATA607 Project 1 -Elo "
+title: "DATA607 Project 1 - Elo "
 author: "David Simbandumwe"
 output:
   html_document:
