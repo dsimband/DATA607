@@ -23,7 +23,7 @@ library(readtext)
 ```
 
 
-#Summary
+# Summary
 This project starts with a text file of chess tournament results. This file is processed to develop an R Markown file that generates a .CSV file that includes:
 + Player’s Name, 
 + Player’s State, 
@@ -32,19 +32,105 @@ This project starts with a text file of chess tournament results. This file is p
 + Average Pre Chess Rating of Opponent
 
 
-The first step in the process is to load the raw text file from github.
+
+# Load Files
 
 ```{r, read file}
 
-#eloTxt <- scan("https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt", 
-
-# read in text file split the file by new line
-eloTxt <- scan("/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamentinfo.txt",
-           character(0), 
-           quote = NULL,
-           sep = "\n")
+ eloTxt <- read_delim( file = "https://raw.githubusercontent.com/dsimband/DATA607/main/Project1/tournamentinfo.txt",              
+          delim = " ",
+          col_names = c("rec"),
+          trim_ws = TRUE)
 
 
+# clean data frame remove extra lines
+eloTxt <- eloTxt %>% 
+  filter(!str_detect(rec,"\\--"))
+
+# remove heading rows
+eloTxt <- eloTxt %>% slice(-c(1,2))
+
+
+```
+
+
+
+
+# Process Odd Rows
+
+```{r, process odd rows}
+
+eloTxt_odd <- eloTxt %>% filter(row_number() %% 2 == 1)
+
+
+eloTxt_odd <- eloTxt_odd %>% 
+      separate(rec, 
+            into = c("id", "name" , "score" , "r1", "r2", "r3", "r4", "r5", "r6", "r7","x" ),
+            extra = "merge", 
+            fill = "left",
+            convert = TRUE,
+            sep = "\\|"
+            ) %>% gather(
+              "r1","r2","r3","r4","r5","r6","r7", key = "round", value = "op_data"
+      )%>% 
+      separate(op_data, 
+            into = c("r_result", "op_id"),
+            convert = TRUE
+      ) %>% 
+      drop_na(op_id)
+
+```
+
+
+
+# Process Even Rows
+
+
+```{r, even rows}
+
+eloTxt_even <- eloTxt %>% filter(row_number() %% 2 == 0)
+
+
+eloTxt_even <- eloTxt_even %>% 
+        separate(rec, 
+              into = c("state", "score_data" , "x" ),
+              extra = "merge", 
+              fill = "left",
+              convert = TRUE,
+              sep = "\\|") %>% 
+        mutate(id = row_number()) %>% 
+        separate(score_data, 
+              into = c("x1", "x2", "x3", "pre_rating", "post_rating"),
+              extra = "merge", 
+              fill = "left",
+              convert = TRUE) %>% 
+        separate(pre_rating, 
+              into = c("pre_rating", "x4"),
+              extra = "merge", 
+              fill = "right",
+              convert = TRUE,
+              sep = "P") %>% 
+        separate(post_rating, 
+              into = c("post_rating", "x5"),
+              extra = "merge", 
+              fill = "right",
+              convert = TRUE,
+              sep = "P") %>% 
+        select(id,state,pre_rating, post_rating)
+
+
+```
+
+
+
+# Join All Rows
+
+```{r, join odd and even rows}
+
+eloTxt_comb  <- eloTxt_odd %>% 
+  select (id, name, score, round, r_result, op_id) %>%
+  left_join(eloTxt_even, by = "id") %>%
+  left_join(eloTxt_even, by = c("op_id" = "id"), suffix = c("", ".op"))
 
 
 ```
@@ -53,174 +139,78 @@ eloTxt <- scan("/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamen
 
 
 
+# Calculate 
+
+```{r, calculate elo for wins and losses}
+
+win_df <- eloTxt_comb %>%
+  group_by(id,r_result) %>%
+  filter(str_detect(r_result, "W")) %>%
+  mutate(
+    win_elo = sum(pre_rating.op) + n()*400,
+    win_num = n()
+  ) %>%
+  select(id,r_result,win_elo, win_num) %>%
+  distinct()
+
+loss_df <- eloTxt_comb %>% group_by(id,r_result) %>%
+  filter(str_detect(r_result, "L")) %>%
+  mutate(
+    loss_elo = sum(pre_rating.op) - n()*400,
+    loss_num = n()
+  ) %>%
+  select(id,r_result,loss_elo, loss_num) %>%
+  distinct()
+
+```
 
 
 
-Process the data from the text file into a structued data frame
-+ create the data frame
-+ split the file into individual lines
-+ loop through each record - each record is represented by 3 lines in the text file
-+ extract the data from each row that will fill the data frame records
+# create the summary table
 
+```{r, summary table}
 
-```{r, process text file}
+eloFinal <- eloTxt_comb %>% 
+  select (id, name, state, score, round, r_result, op_id, pre_rating, post_rating, pre_rating.op, post_rating.op) %>%
+  left_join(win_df, by = "id") %>%
+  left_join(loss_df, by = "id") %>%
+  replace_na(list(win_elo = 0, win_num = 0, loss_elo = 0, loss_num = 0 ))
 
-# create the empty data frame
-df <- data.frame( id = double(),
-                  name = character(),
-                  state = character(),
-                  total_points = double(),
-                  pre_rating = double(),
-                  post_rating = double(),
-                  r1 = double(),
-                  r2 = double(),
-                  r3 = double(),
-                  r4 = double(),
-                  r5 = double(),
-                  r6 = double(),
-                  r7 = double(),
-                  total_rating = double(),
-                  num_games = double(),
-                  avg_rating = double()
-)
-
-
-
-# initialize the loop counter
-i <- 4
-
-
-# loop through each line and process each 3 line record
-while (i < length(eloTxt)) {
-  if (!str_detect(eloTxt[i],"\\--") ) {
-    
-    # extract key data elements
-    g <- eloTxt[i] %>% str_split("\\|", simplify = TRUE)
-    nameTmp <- g[2]
-    scoreTmp <- str_extract(eloTxt[i],"\\d.\\d" )
-    idTmp <- g[1]
-    
-    i <- i + 1
-    
-    g1 <- gsub(" ","",eloTxt[i])
-    stateTmp <- str_extract(g1,"[:alpha:]." )
-    preTmp <- str_extract(g1,"R:\\d..." )
-    preTmp <- str_extract(preTmp,"\\d+" )
-    postTmp <- str_extract(g1,">\\d..." )
-    postTmp <- str_extract(postTmp,"\\d+" )    
-    
-    b <- str_locate(g1,"\\d.\\d")[1]
-    s1 <- str_sub(g, b , str_length(g1)) %>% str_split("\\|", simplify = TRUE) 
-    
-    # extract competitor records
-    pIDvec <- c()
-    x = 4
-    while ( x < 11) {
-      pID <- str_extract(s1[x],"\\d+")
-      pIDvec <- append(pIDvec, as.numeric(pID))
-      x <- x + 1
-    }
-    
-    # write to dataframe
-    df <- df %>% add_row(
-      id = as.numeric(idTmp),
-      name = str_trim(nameTmp),
-      state = str_trim(stateTmp),
-      total_points = as.numeric(scoreTmp),
-      pre_rating = as.numeric(preTmp),
-      post_rating = as.numeric(postTmp),
-      r1 = pIDvec[1],
-      r2 = pIDvec[2],
-      r3 = pIDvec[3],
-      r4 = pIDvec[4],
-      r5 = pIDvec[5],
-      r6 = pIDvec[6],
-      r7 = pIDvec[7],
-    )
-  }
-  i <- i + 1
-}
-
-
-
-
-
+# caclulate average / post elo and filter columns
+eloFinal <- eloFinal %>%
+    group_by(id) %>%
+      mutate(
+          op_avg_rating = round(mean(pre_rating.op),0), 
+          num_games = n(),
+          elo_post = round((win_elo + loss_elo) / n(),0) 
+      ) %>%
+    select(id , name, score, state, pre_rating, post_rating, op_avg_rating, num_games, elo_post) %>%
+    distinct()
 
 ```
 
 
 
 
+# Write Files
 
-
-
-Calculate the average scores for opponents. The reverence to other records requires a completed dataframe before we can calcuate the competitor scores. 
-
-```{r, }
-
-#calculate average score with NA guards
-for (i in 1:nrow(df)) {
-  x <- 0
-  num <- 0
-  if (!is.na(df[df[i,"r1"],"pre_rating"])) { 
-    x <- x + df[df[i,"r1"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r2"],"pre_rating"])) { 
-    x <- x + df[df[i,"r2"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r3"],"pre_rating"])) { 
-    x <- x + df[df[i,"r3"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r4"],"pre_rating"])) {
-    x <- x + df[df[i,"r4"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r5"],"pre_rating"])) { 
-    x <- x + df[df[i,"r5"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r6"],"pre_rating"])) { 
-    x <- x + df[df[i,"r6"],"pre_rating"] 
-    num <- num + 1
-  }
-  if (!is.na(df[df[i,"r7"],"pre_rating"])) { 
-    x <- x + df[df[i,"r7"],"pre_rating"] 
-    num <- num + 1
-  }
-  
-  #write data to df
-  df[i,"total_rating"] <- x
-  df[i,"num_games"] <- num
-  df[i,"avg_rating"] <- x/num
-
-  
-}
-
-```
-
-
-
-
-
-
-
-
-Final step in the process is to write the data to a file. 
-
-```{r, }
+```{r, write results to file}
 
 # write the results out to disk
-write.csv(df, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamentinfo.csv", row.names=TRUE)
+write.csv(eloFinal, "tournamentinfo.csv", row.names=FALSE)
 
 ```
 
 
 
+# Plot
 
+```{r, plot results}
 
+# write the results out to disk
+ggplot(data=eloFinal, aes(x=name, y=op_avg_rating)) + geom_bar(stat="identity") + coord_flip()
+
+```
 
 
 
