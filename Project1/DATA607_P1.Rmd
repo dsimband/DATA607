@@ -185,7 +185,8 @@ eloFinal <- eloFinal %>%
           elo_post = round((win_elo + loss_elo) / n(),0) 
       ) %>%
     select(id , name, score, state, pre_rating, post_rating, op_avg_rating, num_games, elo_post) %>%
-    distinct()
+    distinct() %>%
+    arrange(id)
 
 ```
 
@@ -193,25 +194,118 @@ eloFinal <- eloFinal %>%
 
 
 # Write Files
+The instructions say 
+
+| When you write your .CSV, do not include a relative path (e.g. “tournament.csv” instead of "C:/Users/gerso/Documents/DATA-607/tournament.csv"), so that your code is more reproducible. (2 points)
+
+this seems a little counter intuitive as I would assume that not everyone would have the same directory structure on their local machine. I based the code on a relative path but i also included the full path per the instructions. 
 
 ```{r, write results to file}
 
 # write the results out to disk
 write.csv(eloFinal, "tournamentinfo.csv", row.names=FALSE)
 
+# full path
+write.csv(eloFinal, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project1/tournamentinfo.csv", row.names=FALSE)
+
+
 ```
 
 
 
-# Plot
+# Results
+Reviewing the results of the tournament there are several big movers in both the positive and the negative directions.  The largest positive jump can be attributed to Jacob not having a high ELO rating at the start of the tournament but managing to win games against higher ranked players. The negative movement were much smaller and were caused by losses to players with lower ELO rankings
+
 
 ```{r, plot results}
 
-# write the results out to disk
-ggplot(data=eloFinal, aes(x=name, y=op_avg_rating)) + geom_bar(stat="identity") + coord_flip()
+eloFinal %>%
+  mutate(
+    dif_rate = post_rating - elo_post,
+    post_pre = post_rating - pre_rating
+  ) %>%
+filter (post_pre > 50 | post_pre < -50) %>%
+ggplot(aes(x=name, y=post_pre)) + geom_bar(stat="identity") + coord_flip()
+  
+  
+eloFinal %>%
+mutate(
+  dif_rate = post_rating - elo_post,
+  post_pre = post_rating - pre_rating
+) %>%
+filter (post_pre > 50 | post_pre < -50) %>%
+ggplot(aes(x=name, y=dif_rate)) + geom_bar(stat="identity") + coord_flip()
+
 
 ```
 
+
+
+### 46 JACOB ALEXANDER LAVALLEY
+Jacob started with a low ELO rating and he competed against players with much higher ratings and he was able to defeat several players. The average ELO rating of his opponent was 1358. He had a solid tournament if you calculated his ELO rating based on his tournament performance and the average pre tournament ratings of his competitors his ELO rating would have been 1301 (ignoring his pre tournament ELO rating). 
+
+```{r, plot 46 JACOB ALEXANDER LAVALLEY}
+
+eloTxt_comb %>%
+  left_join(eloFinal, by = c("op_id" = "id")) %>%
+  filter (id == 46) %>%
+  select(id, name.x, pre_rating.op, r_result, name.y) %>%
+  distinct() %>%
+ggplot(aes(y=name.y, x=pre_rating.op, color = r_result)) + geom_point()
+  
+
+```
+
+
+
+### 3 ADITYA BAJAJ
+Abitya performed well against players with higher rankings that accounted for the movement in his ELO score. He had a solid tournament if you calculated his ELO rating based on his tournament performance and the average pre tournament ratings of his competitors his ELO rating would have been 1849 (ignoring his pre tournament ELO rating) 
+
+```{r, plot 3 ADITYA BAJAJ}
+
+eloTxt_comb %>%
+  left_join(eloFinal, by = c("op_id" = "id")) %>%
+  filter (id == 3) %>%
+  select(id, name.x, pre_rating.op, r_result, name.y) %>%
+  distinct() %>%
+ggplot(aes(y=name.y, x=pre_rating.op, color = r_result)) + geom_point()
+  
+
+```
+
+
+
+###  29 CHIEDOZIE OKORIE 
+Chiedoxie lost 2 games.He had a poor tournament if you calculated his ELO rating based on his tournament performance and the average pre tournament ratings of his competitors his ELO rating would have been 1099 (ignoring his pre tournament ELO rating)  
+
+```{r, plot 29 CHIEDOZIE OKORIE}
+
+eloTxt_comb %>%
+  left_join(eloFinal, by = c("op_id" = "id")) %>%
+  filter (id == 29) %>%
+  select(id, name.x, pre_rating.op, r_result, name.y) %>%
+  distinct() %>%
+ggplot(aes(y=name.y, x=pre_rating.op, color = r_result)) + geom_point()
+  
+
+```
+
+
+
+###  30 GEORGE AVERY JONES 
+George lost 2 games to players of with lower ELO rankings. He had a poor tournament if you calculated his ELO rating based on his tournament performance and the average pre tournament ratings of his competitors his ELO rating would have been 978 (ignoring his pre tournament ELO rating)  
+
+```{r, plot 30 GEORGE AVERY JONES }
+
+eloTxt_comb %>%
+  left_join(eloFinal, by = c("op_id" = "id")) %>%
+  filter (id == 30) %>%
+  select(id, name.x, pre_rating.op, r_result, name.y) %>%
+  distinct() %>%
+ggplot(aes(y=name.y, x=pre_rating.op, color = r_result)) + geom_point()
+  
+
+```
 
 
 
