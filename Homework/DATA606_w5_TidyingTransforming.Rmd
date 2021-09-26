@@ -1,0 +1,176 @@
+---
+title: DATA 607 Tidying and Transforming Vaccination Data
+author: 'David Simbandumwe'
+output:
+  pdf_document:
+    extra_dependencies:
+    - geometry
+    - multicol
+    - multirow
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readtext)
+library(lubridate)
+
+```
+
+
+
+
+### Data Preparation
+
+```{r}
+
+# create the empty data frame
+df <- data.frame( age = character(),
+                  pop_not_vax = double(),
+                  po_not_vax_per = double(),
+                  pop_vax = double(),
+                  pop_vax_per = double(),
+                  case_not_vax = double(),
+                  case_vax = double()
+)
+
+# add data from xls
+df <- df  %>% 
+  add_row(
+    age = "under 50",
+    pop_not_vax = 1116834,
+    po_not_vax_per = 0.233,
+    pop_vax = 3501118,
+    pop_vax_per = 0.730,
+    case_not_vax = 43,
+    case_vax = 11
+  ) %>% 
+  add_row(
+    age = "over 50",
+    pop_not_vax = 186078,
+    po_not_vax_per = 0.079,
+    pop_vax = 2133516,
+    pop_vax_per = 0.904,
+    case_not_vax = 171,
+    case_vax = 290
+  )
+
+# write the start file
+write.csv(df, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/israeli_vaccination_data_analysis_start.csv", row.names=FALSE)
+
+
+# read csv from 
+vax_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/israeli_vaccination_data_analysis_start.csv")
+
+```
+
+
+# Tiddy Data
+Transform the wide data format into tiddy data using the gather function. Note the percentages for completeness but you could ignore those values since they can be calculated when needed. Created a boolean variable to track vaccination status. Updatd the cas counts so that each row reflects age, vax status, population and the case count.
+
+```{r}
+#tiddy data
+
+
+vax_df <- vax_df %>% 
+  gather(
+    "pop_not_vax","pop_vax",
+    key = "type", value = "population"
+  ) %>% 
+  mutate (
+    vax_status = ifelse("pop_vax" == type, TRUE, FALSE)
+  ) %>% 
+  mutate (
+    cases = ifelse(vax_status, case_vax, case_not_vax)
+  ) %>%
+    select(age, vax_status, population, cases)
+
+
+```
+
+
+
+
+**(1) Israel’s total population**
+
+```{r}
+
+vax_df %>% 
+  summarise(
+    tot_pop = sum(population)
+  )
+
+
+```
+
+According to the data Israel's total population is 6,937,546. I believe what they are referring to is the total population of individual eligible for a covid vaccine.  
+
+https://www.cbs.gov.il/en/pages/default.aspx
+Israel's Central Bureau of Statistics (July 2021)
+9.378 million residents in isreal
+
+
+https://www.cbs.gov.il/he/publications/doclib/2021/2.shnatonpopulation/st02_03.pdf
+Averages for 2020
+9,215.1 - total population
+2.123 - 11 and under
+7.078 - 12 and over
+
+
+
+**(2) Who is eligible to receive vaccinations, and** 
+
+According to the latest article that i could find from the times of isreal. Individual over the age of 12 are eligable for vaccination and the 3rd booster shot of the Pfizer vaccine. 
+
+https://www.timesofisrael.com/israel-offers-covid-booster-shot-to-all-eligible-for-vaccine/
+Israel widens 3rd COVID booster shot to those aged 12 and over
+
+
+**(3) What does it mean to be fully vaccinated? Please note any apparent discrepancies that you observe in your analysis.**
+People fully vaccinated shows how many people have received the full amount of doses for the COVID-19 vaccine. Since some vaccines require more than 1 dose, the number of fully vaccinated people is likely lower. Although it does not state this in the document I assume that they are using the standard definition of fully vaccinated. The number presented match the Google news COVID tracker for Israel 5.611 million (google) vs 5.635 million (assignment)
+
+The analysis has 2 categories not vaccinated and fully vaccinated. It does not address individual that are partially vaccinated 1 shot of 2 or who have taken the booster shoot (3rd dose) will complicate that analysis. Also individual under the age of 12 are not included in the analysis
+
+
+
+**(1) Do you have enough information to calculate the total population. What does this total population represent?**
+
+No you do not have enough information to calculate the total population of Israel. The data is missing residents of Israel under the age of 12. The analysis seems to capture only the individuals eligible to be vaccinated.  
+
+**(2) Calculate the Efficacy vs. Disease; Explain your results.**
+
+```{r}
+
+case_df <- vax_df %>% 
+  group_by(vax_status) %>%
+  summarize(
+    tot_case = sum(cases),
+    tot_per100k = tot_case / 100000
+  )
+
+vax_per100k <- as.double(case_df %>%
+  filter(vax_status) %>%
+  select(tot_per100k))
+
+no_vax_per100k <- as.double(case_df %>%
+  filter(!vax_status) %>%
+  select(tot_per100k))
+
+efficacy = 1 - (vax_per100k / no_vax_per100k)
+
+```
+
+Based on the analysis we observe an efficacy rate of -0.407. This seems a bit odd however the biggest discrepancy in expected results is for individual over the age of 50 who are overwhelmingly vaccinated (90.4%). This discrepancy in vaccination rates may be throwing off the expected results for this demographic group (290 cases for fully vaccinated vs 171 cases for non vacinated). This could also be caused by the relatively small numbers of cases in the population. 
+
+
+**(3) From your calculation of efficiency vs. disease, are you able to compare the rate of severe cases in unvaccinated individuals to that in vaccinated individuals?** 
+
+We cannot compare the rates for the entire population however we can compare the rates for the population that is eligible for vaccinations. 
+* 0.2%  cases for non vaccinated individual
+* 0.3% for vaccinated individual
+
+
+
