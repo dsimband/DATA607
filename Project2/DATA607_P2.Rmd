@@ -104,6 +104,7 @@ mortality_df %>%
 ```
 The regional view of the data shows a similar pattern. All regions are seeing reduced rates of child mortality. With the largest drops in the Sub Saharan Africa region. Interesting to note in the late 60s there was jump in the mortality rate. 
 
+## Conclusion
 
 
 
