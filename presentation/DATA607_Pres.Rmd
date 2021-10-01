@@ -1,0 +1,172 @@
+---
+title: DATA 607 Preparing Datasets
+author: 'David Simbandumwe'
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    extra_dependencies:
+    - geometry
+    - multicol
+    - multirow
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stringr)
+library (readr)
+library(tidytext)
+library(janeaustenr)
+library(glue)
+
+
+get_sentiments(lexicon = c("bing", "afinn", "loughran", "nrc"))
+
+```
+
+
+```{r global}
+
+email_path = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/presentation/email/"
+
+
+```
+
+
+```{r functions, include=FALSE}
+
+# write a function that takes the name of a file and returns the # of postive
+# sentiment words, negative sentiment words, the difference & the normalized difference
+GetSentiment <- function(file, path){
+    # get the file
+    fileName <- glue(path, file, sep = "")
+    # get rid of any sneaky trailing spaces
+    fileName <- trimws(fileName)
+    
+    # read in the new file
+    fileText <- glue(read_file(fileName))
+    # remove any dollar signs (they're special characters in R)
+    fileText <- gsub("\\$", "", fileText) 
+    
+    # tokenize
+    tokens <- tibble(text = fileText) %>% unnest_tokens(word, text)
+    
+    print(tokens)
+    
+    # get the sentiment from the first text: 
+    sentiment <- tokens %>%
+        inner_join(get_sentiments("bing")) %>% # pull out only sentimen words
+        count(sentiment) %>% # count the # of positive & negative words
+        spread(sentiment, n, fill = 0) %>% # made data wide rather than narrow
+        mutate(sentiment = positive - negative) %>% # # of positive words - # of negative owrds
+        mutate(file = file) %>% # add the name of our file
+        mutate(year = as.numeric(str_match(file, "\\d{4}"))) %>% # add the year
+        mutate(president = str_match(file, "(.*?)_")[2]) # add president
+    
+    
+    # return our sentiment dataframe
+    return(sentiment)
+}
+
+
+
+
+
+GetSentiment_af <- function(file, path){
+    # get the file
+    fileName <- glue(path, file, sep = "")
+    # get rid of any sneaky trailing spaces
+    fileName <- trimws(fileName)
+    
+    # read in the new file
+    fileText <- glue(read_file(fileName))
+    # remove any dollar signs (they're special characters in R)
+    fileText <- gsub("\\$", "", fileText) 
+    
+    # tokenize
+    tokens <- tibble(text = fileText) %>% unnest_tokens(word, text)
+    
+    # get the sentiment from the first text: 
+    afinn <- tokens %>%
+        mutate(word_count = 1:n(),
+               index = word_count %/% 500 + 1) %>% 
+        inner_join(get_sentiments("afinn")) %>%
+        group_by(index) %>%
+        summarise(sentiment = sum(value)) %>%
+        mutate(method = "AFINN")
+    
+    # return our sentiment dataframe
+    return(afinn)
+}
+
+```
+
+
+
+# Introduction
+The goal 
+
+
+
+
+
+
+
+
+
+
+
+## Load Data
+Loaded the data from a csv file
+
+```{r}
+
+files <- list.files(email_path )
+
+GetSentiment(files[1], path = email_path)
+
+
+
+
+```
+
+
+
+```{r}
+
+GetSentiment_af(files[1], path = email_path)
+
+```
+
+## Tiddy Data
+For this analysis i wanted to evaluate the mortality data from three regions. I selected 2 countries from Sub Saharan Africa, Europe and North America. 
+
+Steps
+* Filter the data by selected countries
+
+
+
+
+## Analysis
+
+```{r}
+
+
+
+```
+
+
+
+
+
+
+## Conclusion
+
+
+
+
+
+
