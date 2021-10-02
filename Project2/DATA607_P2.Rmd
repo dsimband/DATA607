@@ -47,6 +47,13 @@ Loaded the data from a csv file
 
 mortality_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/unicef-u5mr.csv")
 
+#meta data
+country_meta <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/country_meta.csv")
+region_meta <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/region_meta.csv")
+
+meta <- country_meta %>%
+  left_join(region_meta, by = c("region"))
+
 ```
 
 
@@ -54,26 +61,53 @@ mortality_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/
 For this analysis i wanted to evaluate the mortality data from three regions. I selected 2 countries from Sub Saharan Africa, Europe and North America. 
 
 Steps
-* Filter the data by selected countries
+* clean the country name field
 * added the regional flag to the dataset
 * gathered the year data into rows
 * updated the year column to numeric
 * drop all rows with invalid data for u5mr
 
+
+
 ```{r}
 
+mortality_df <- within(mortality_df, CountryName[CountryName == "Antigua & Barbuda"] <- "Antigua and Barbuda")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Bosnia & Herzegovina"] <- "Bosnia and Herzegovina")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Brunei"] <- "Brunei Darussalam")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Congo"] <- "Congo, Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Congo DR"] <- "Congo, Dem. Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Gambia The"] <- "Gambia, The")
+mortality_df <- within(mortality_df, CountryName[CountryName == "State of Palestine"] <- "")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Iran"] <- "Iran, Islamic Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Cote d Ivoire"] <- "Cote d'Ivoire")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Korea DPR"] <- "Korea, Dem. People's Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Korea Rep"] <- "Korea, Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Federated States of Micronesia"] <- "Micronesia, Fed. Sts.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Timor Leste"] <- "Timor-Leste")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Saint Kitts & Nevis"] <- "St. Kitts and Nevis")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Saint Lucia"] <- "St. Lucia")
+mortality_df <- within(mortality_df, CountryName[CountryName == "St Vincent & the Grenadines"] <- "St. Vincent and the Grenadines")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Sao Tome & Principe"] <- "Sao Tome and Principe")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Slovakia"] <- "Slovenia")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Swaziland"] <- "Switzerland")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Syria"] <- "Syrian Arab Republic")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Trinidad & Tobago"] <- "Trinidad and Tobago")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Egypt"] <- "Egypt, Arab Rep.")
+mortality_df <- within(mortality_df, CountryName[CountryName == "United States of America"] <- "United States")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Venezuela"] <- "Venezuela, RB")
+mortality_df <- within(mortality_df, CountryName[CountryName == "Yemen"] <- "Yemen, Rep.")
+ 
+
 mortality_df <- mortality_df %>%
-  filter (CountryName %in% c("Burundi","Nigeria","Germany","France","Canada","United States of America")) %>%
-  mutate (
-    Region = ifelse(CountryName %in% c("Burundi","Nigeria"),"Sub-Saharan Africa",
-                    ifelse(CountryName %in% c("Germany","France"),"Europe", "North America")
-    )
-  ) %>%
+  left_join(meta, by = c("CountryName" = "country_name")) %>%
   gather(year, u5mr, "U5MR 1950":"U5MR 2015") %>%
   mutate(year = as.numeric(gsub("U5MR.", "", year))) %>%
   drop_na(u5mr)
+  
+
 
 ```
+
 
 
 ## Analysis
@@ -81,12 +115,60 @@ mortality_df <- mortality_df %>%
 ```{r}
 
 ggplot(data = mortality_df) + 
-  geom_line(mapping = aes(x=year, y=u5mr, color=CountryName))
+  geom_point(mapping = aes(x=year, y=u5mr, color=region, alpha=1/10)) +
+  labs(
+    title = "Mortality Data (by region)",
+    x = "year",
+    y = "Mortality"  
+  )
+
+
+
 
 ```
 There are large drops in the mortality rates across all countries from 1950 to 2015. However there still remains a substantial differential in the rates from European and North American countries. The difference between the regions has been shrinking over the years. 
 
 
+```{r}
+
+ggplot(data = mortality_df) + 
+  geom_point(mapping = aes(x=year, y=u5mr, color=income_group, alpha=1/10)) +
+  labs(
+    title = "Mortality Data (by income group)",
+    x = "year",
+    y = "Mortality"  
+  )
+
+```
+
+We see similar results when we color the data by income groups. General declines across all countries with a pronounced difference between the high and the low income countries.
+
+
+
+
+```{r}
+ggplot(data = mortality_df) +
+  geom_boxplot(mapping = aes(y=region, x=u5mr)) +
+  labs (
+    title = "Mortality by Region"  
+  )
+  
+
+```
+To view the data slightly differenlty highlighting the variation by region we can view a box plot of the full data set. Sub-Saharan Africa, South Asia, the Middle East & North Africa show larger interquartile range.
+
+
+
+```{r}
+mortality_df %>%
+  filter(year > 2010) %>%
+  ggplot() +
+    geom_boxplot(mapping = aes(y=region, x=u5mr)) +
+    labs (
+      title = "Mortality by Region (2010 - 2015)"  
+    )
+  
+```
 
 ```{r}
 
