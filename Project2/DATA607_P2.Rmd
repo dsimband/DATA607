@@ -16,8 +16,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(plyr)
 library(readtext)
 library(lubridate)
+library(ggpubr)
+library(Hmisc)
+library(corrplot)
 
 ```
 
@@ -68,35 +72,14 @@ Steps
 * drop all rows with invalid data for u5mr
 
 
-
 ```{r}
 
-mortality_df <- within(mortality_df, CountryName[CountryName == "Antigua & Barbuda"] <- "Antigua and Barbuda")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Bosnia & Herzegovina"] <- "Bosnia and Herzegovina")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Brunei"] <- "Brunei Darussalam")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Congo"] <- "Congo, Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Congo DR"] <- "Congo, Dem. Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Gambia The"] <- "Gambia, The")
-mortality_df <- within(mortality_df, CountryName[CountryName == "State of Palestine"] <- "")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Iran"] <- "Iran, Islamic Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Cote d Ivoire"] <- "Cote d'Ivoire")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Korea DPR"] <- "Korea, Dem. People's Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Korea Rep"] <- "Korea, Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Federated States of Micronesia"] <- "Micronesia, Fed. Sts.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Timor Leste"] <- "Timor-Leste")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Saint Kitts & Nevis"] <- "St. Kitts and Nevis")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Saint Lucia"] <- "St. Lucia")
-mortality_df <- within(mortality_df, CountryName[CountryName == "St Vincent & the Grenadines"] <- "St. Vincent and the Grenadines")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Sao Tome & Principe"] <- "Sao Tome and Principe")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Slovakia"] <- "Slovenia")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Swaziland"] <- "Switzerland")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Syria"] <- "Syrian Arab Republic")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Trinidad & Tobago"] <- "Trinidad and Tobago")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Egypt"] <- "Egypt, Arab Rep.")
-mortality_df <- within(mortality_df, CountryName[CountryName == "United States of America"] <- "United States")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Venezuela"] <- "Venezuela, RB")
-mortality_df <- within(mortality_df, CountryName[CountryName == "Yemen"] <- "Yemen, Rep.")
- 
+replace <-  c("Antigua & Barbuda","Bosnia & Herzegovina","Brunei","Congo","Congo DR","Gambia The","Iran","Cote d Ivoire","Korea DPR","Korea Rep","Federated States of Micronesia","Timor Leste","Saint Kitts & Nevis","Saint Lucia","St Vincent & the Grenadines","Sao Tome & Principe","Slovakia","Swaziland","Syria","Trinidad & Tobago","Egypt","United States of America","Venezuela","Yemen")
+
+with_this <- c("Antigua and Barbuda","Bosnia and Herzegovina","Brunei Darussalam","Congo, Rep.","Congo, Dem. Rep.","Gambia, The","Iran, Islamic Rep.","Cote d'Ivoire","Korea, Dem. People's Rep.","Korea, Rep.","Micronesia, Fed. Sts.","Timor-Leste","St. Kitts and Nevis","St. Lucia","St. Vincent and the Grenadines","Sao Tome and Principe","Slovenia","Switzerland","Syrian Arab Republic","Trinidad and Tobago","Egypt, Arab Rep.","United States","Venezuela, RB","Yemen, Rep.")
+
+
+mortality_df$CountryName <- mapvalues(mortality_df$CountryName, replace,with_this)
 
 mortality_df <- mortality_df %>%
   left_join(meta, by = c("CountryName" = "country_name")) %>%
@@ -125,6 +108,8 @@ ggplot(data = mortality_df) +
 
 
 
+
+
 ```
 There are large drops in the mortality rates across all countries from 1950 to 2015. However there still remains a substantial differential in the rates from European and North American countries. The difference between the regions has been shrinking over the years. 
 
@@ -148,7 +133,7 @@ We see similar results when we color the data by income groups. General declines
 
 ```{r}
 ggplot(data = mortality_df) +
-  geom_boxplot(mapping = aes(y=region, x=u5mr)) +
+  geom_boxplot(mapping = aes(y=region, x=u5mr, color=region)) +
   labs (
     title = "Mortality by Region"  
   )
@@ -163,7 +148,7 @@ To view the data slightly differenlty highlighting the variation by region we ca
 mortality_df %>%
   filter(year > 2010) %>%
   ggplot() +
-    geom_boxplot(mapping = aes(y=region, x=u5mr)) +
+    geom_boxplot(mapping = aes(y=region, x=u5mr, color=region)) +
     labs (
       title = "Mortality by Region (2010 - 2015)"  
     )
@@ -173,21 +158,36 @@ mortality_df %>%
 ```{r}
 
 mortality_df %>% 
-  group_by(year, Region) %>%
-  mutate(
-    reg_tot = sum(u5mr)
+  filter(year > 1989) %>%
+  group_by(year, region) %>%
+  dplyr::mutate(
+    reg_tot = sum(u5mr),
+    reg_num = n()
   ) %>%
-  select(Region, year, reg_tot) %>%
+  select(region, year, reg_tot, reg_num) %>%
   distinct() %>%
   ggplot() + 
-  geom_line(mapping = aes(x=year, y=reg_tot, color=Region))
+  geom_line(mapping = aes(x=year, y=reg_num, color=region, alpha=1/10))
+
+
+mortality_df %>% 
+  filter(year > 1989) %>%
+  group_by(year, region) %>%
+  dplyr::mutate(
+    reg_tot = sum(u5mr),
+    reg_num = n()
+  ) %>%
+  select(region, year, reg_tot, reg_num) %>%
+  distinct() %>%
+  ggplot() + 
+  geom_line(mapping = aes(x=year, y=reg_tot, color=region, alpha=1/10))
   
 
 ```
 The regional view of the data shows a similar pattern. All regions are seeing reduced rates of child mortality. With the largest drops in the Sub Saharan Africa region. Interesting to note in the late 60s there was jump in the mortality rate. 
 
 ## Conclusion
-
+All of the analysis points to the same conclusions. Child mortality has improved over the years however there still remains clear distinctions in mortality levels based on region and income. 
 
 
 #COVID-19 Mortality Rates in NYC
@@ -272,11 +272,24 @@ covid_df <- covid_df[ , !(names(covid_df) == "junk")]
 covid_df %>%
   filter(group == "Age", event=="DEATH") %>%
   ggplot(aes(fill=borough, y=count, x=subgroup)) + 
-    geom_bar(position="dodge", stat="identity")
+    geom_bar(position="dodge", stat="identity") +
+    labs(
+      title = "COVID Mortality Data (by age group and borough)"
+    )
 
+
+covid_df %>%
+  filter(group == "Age", event=="DEATH") %>%
+  ggplot() + 
+    geom_point(mapping = aes(x=count, y=subgroup, color=borough)) +
+    labs(
+      title = "COVID Mortality Data (by age group and borough)"
+    )
 
 ```
 The grouped bar chart highlights death rates per age group by borough. As expected the larger boroughs have higher numbers of COVID deaths.
+
+
 
 
 
@@ -287,9 +300,36 @@ covid_df %>%
   ggplot(aes(fill=borough, y=count, x=subgroup)) + 
     geom_bar(position="dodge", stat="identity")
 
+covid_df %>%
+  filter(group == "Age", event=="HOSPITALIZED") %>%
+  ggplot() + 
+  geom_point(mapping = aes(x=count, y=subgroup, color=borough)) +
+  labs(
+    title = "COVID Hospitalizations Data (by income age group and borough)"
+  )
 
 ```
 The grouped bar chart highlights death rates per age group by borough.As expected the larger boroughs have higher numbers of COVID hospitalizations.
+
+
+```{r}
+covid_df %>%
+  filter(group == "Race/ethnicity", event=="DEATH") %>%
+  ggplot(aes(fill=subgroup, y=count, x=borough)) + 
+    geom_bar(position="dodge", stat="identity") +
+    labs(
+      title = "COVID Death Data (by race and borough)"
+    )
+
+
+
+```
+
+
+
+
+
+
 
 
 
@@ -318,7 +358,7 @@ Load data from a csv file. There is some additional file information at the star
 ```{r}
 # load data
 
-gdp_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/gdp.csv",
+gdp_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/gdp_growth.csv",
                  col_names = FALSE,
                  skip_empty_rows = TRUE
                  )
@@ -330,6 +370,30 @@ a[2] = "CountryCode"
 a[3] = "IndicatorName"
 a[4] = "IndicatorCode"
 colnames(gdp_df) <- a 
+
+
+#
+wb_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/world_bank_data.csv",
+                 skip_empty_rows = TRUE
+                 )
+
+
+wb_df <- wb_df %>% 
+  rename_with(~ gsub('\\s', '', .x))
+
+
+
+wb_df <- wb_df %>%
+  rename(
+    c("SeriesName" = "series_name",
+      "SeriesCode" = "series_code",
+      "CountryName" = "country_name",
+      "CountryCode" = "country_code"
+      )
+  )
+
+      
+      
 
 
 ```
@@ -347,43 +411,82 @@ The steps taken:filter by the desired countries
 * join the gdp data with the child mortality data from the first part of the assignment
 * clean up the rows
 
-
-
-
 ```{r}
 
-# update mortality country field to match gpd data
-mortality_df <- mortality_df %>%
-  mutate(
-    CountryName = ifelse(CountryName == "United States of America","United States", CountryName)
-  )
+c_measures <- c("SP.POP.TOTL", "SP.POP.GROW", "SP.DYN.LE00.IN", "SP.DYN.TFRT.IN", "SP.ADO.TFRT", "SH.STA.MALN.ZS", "SH.IMM.MEAS", "SE.SEC.ENRR", "SE.ENR.PRSC.FM.ZS", "EG.USE.PCAP.KG.OE", "EN.ATM.CO2E.PC", "EG.USE.ELEC.KH.PC", "NY.GDP.MKTP.CD", "NY.GDP.MKTP.KD.ZG", "NY.GDP.DEFL.KD.ZG", "NV.AGR.TOTL.ZS", "NV.IND.TOTL.ZS", "NE.GDI.TOTL.ZS", "GC.REV.XGRT.GD.ZS", "CM.MKT.LCAP.GD.ZS", "MS.MIL.XPND.GD.ZS", "IT.CEL.SETS.P2", "TG.VAL.TOTL.GD.ZS", "TT.PRI.MRCH.XD.WD", "BM.TRF.PWKR.CD.DT", "BX.KLT.DINV.CD.WD", "NY.GDP.PCAP.CD", "BN.KLT.DINV.CD", "FP.CPI.TOTL.ZG")
+
+
+
+wb_df <- wb_df %>%
+  subset(series_code %in% c_measures) %>%
+  gather(year, value, "2000[YR2000]":"2015[YR2015]") %>%
+  mutate(year = as.numeric(gsub("\\[YR20\\d+\\]", "", year))) %>%
+  drop_na(value) %>%
+  subset(select = -series_name )
+
+
+wb_df$value = as.numeric(wb_df$value)
   
+wb_df <- wb_df %>% 
+  spread(series_code, value)
+
+
+wb_df <- wb_df %>%
+  rename(
+    c("SP.POP.TOTL" = "population_total", 
+      "SP.POP.GROW" = "population_growth", 
+      "SP.DYN.LE00.IN" = "life_expectancy", 
+      "SP.DYN.TFRT.IN" = "fertility_rate",
+      "SP.ADO.TFRT" = "adolescent_fertility_rate", 
+      "SH.STA.MALN.ZS" = "underweight_u5", 
+      "SH.IMM.MEAS" = "immunization_measles", 
+      "SE.SEC.ENRR" = "enrollment_secondary_school", 
+      "SE.ENR.PRSC.FM.ZS" = "enrollment_primary_secondary", 
+      "EG.USE.PCAP.KG.OE" = "energy_use", 
+      "EN.ATM.CO2E.PC" = "co2_emissions", 
+      "EG.USE.ELEC.KH.PC" = "electric_power_cons", 
+      "NY.GDP.MKTP.CD" = "gdp", 
+      "NY.GDP.MKTP.KD.ZG" = "gdp_growth", 
+      "NY.GDP.DEFL.KD.ZG" = "gdp_deflator", 
+      "NV.AGR.TOTL.ZS" = "ag_value_add", 
+      "NV.IND.TOTL.ZS" = "industry_value_add", 
+      "NE.GDI.TOTL.ZS" = "gross_capital_formation", 
+      "GC.REV.XGRT.GD.ZS" = "revenue_no_grants", 
+      "CM.MKT.LCAP.GD.ZS" = "mkt_cap", 
+      "MS.MIL.XPND.GD.ZS" = "mil_expenditures", 
+      "IT.CEL.SETS.P2" = "cell_subs", 
+      "TG.VAL.TOTL.GD.ZS" = "merch_trade", 
+      "TT.PRI.MRCH.XD.WD" = "net_barter_terms", 
+      "BM.TRF.PWKR.CD.DT" = "personal_remittance", 
+      "BX.KLT.DINV.CD.WD" = "foreign_direct_investment", 
+      "NY.GDP.PCAP.CD" = "gdp_per_capita", 
+      "BN.KLT.DINV.CD" = "foreign_direct_investment_net", 
+      "FP.CPI.TOTL.ZG" = "consumer_price_index"
+      )
+  )
+
+
 
 
 gdp_df <- gdp_df %>%
-  filter (CountryName %in% c("Burundi","Nigeria","Germany","France","Canada","United States")) %>%
-  mutate (
-    Region = ifelse(CountryName %in% c("Burundi","Nigeria"),"Sub-Saharan Africa",
-                    ifelse(CountryName %in% c("Germany","France"),"Europe", "North America")
-    )
-  ) %>%
   gather(year, growth, "1960":"2020") %>%
   drop_na(growth) %>%
-  select(CountryName, CountryCode,Region,year,growth) %>%
+  select(CountryName, CountryCode, year, growth) %>%
   transform(year = as.numeric(year))
 
 
 comb_df <- gdp_df %>%
-  left_join(mortality_df, by = c("CountryName" = "CountryName","year" = "year" )) %>%
-  drop_na(u5mr) %>%
-  rename(
-      region =  Region.x
-  )
-  
-  comb_df <- comb_df[ , !(names(comb_df) == "Region.y")]
+  inner_join(wb_df, by = c("CountryCode" = "country_code", "year")) %>%
+  left_join(mortality_df, by = c("CountryCode" = "country_id", "year" )) %>%
+  subset(select = -c(CountryName.x, CountryName.y) ) 
+
 
 
 ```
+
+
+
+
 
 ## Analysis
 
@@ -391,8 +494,27 @@ comb_df <- gdp_df %>%
 
 ```{r}
 
+comb_df %>%
+  ggplot() + 
+    geom_point(mapping = aes(y=gdp, x=u5mr, color=region, alpha=1/10)) +
+    scale_y_discrete(breaks = 20) +
+    labs(
+      title = "GDP Compaired ot Child Mortality"
+    )
+
 ggplot(data = comb_df) + 
-  geom_line(mapping = aes(x=year, y=growth, color=CountryName))
+  geom_point(mapping = aes(x=u5mr, y=growth, color=region, alpha=1/10)) + 
+    labs(
+      title = "GDP Growth Compaired ot Child Mortality"
+    )
+
+ggplot(data = comb_df) + 
+  geom_point(mapping = aes(x=u5mr, y=gdp_per_capita, color=region, alpha=1/10)) + 
+    labs(
+      title = "GDP per Capita Compaired ot Child Mortality"
+    )
+
+
 
 ```
 
@@ -402,10 +524,19 @@ The growth in gdp by country over the years shows that countries in Europe and N
 
 ```{r}
 
-gdp_df %>%
-  filter(year > 2010) %>%
-    ggplot() + 
-    geom_line(mapping = aes(x=year, y=growth, color=CountryName))
+t <- comb_df %>% 
+  select(gdp, gdp_growth, gdp_per_capita, u5mr,foreign_direct_investment_net, population_total, population_growth, co2_emissions, cell_subs, consumer_price_index, fertility_rate, enrollment_primary_secondary, enrollment_secondary_school) %>%
+  drop_na() 
+
+
+comb_df.rcorr = rcorr(as.matrix(t))
+comb_df.rcorr
+    
+    
+comb_cor = cor(t, method = c("spearman"))
+corrplot(comb_cor, title="Coorelation All Records") 
+
+
 
 ```
 If we zoom in to 2020 we can see the impact of COVID on economies across the world. It is interesting that COVID impacted countries in Europ and North America more than it impacted countries in Sub-Saharan Africa.
@@ -414,42 +545,69 @@ If we zoom in to 2020 we can see the impact of COVID on economies across the wor
 
 
 
-```{r}
-
-ggplot(data = comb_df) + 
-  geom_point(mapping = aes(x=u5mr, y=growth, color=CountryName))
-
-```
-
-When reviewing GDP growth mapped against child mortality the data for Europe and North America are tightly clustered around 0% growth and low child mortality. The data for Sub-Saharan Africa is a little mixed. 
-
 
 
 ```{r}
 
-comb_df %>%
-  filter(year > 2010) %>%
-  ggplot() + 
-  geom_point(mapping = aes(x=u5mr, y=growth, color=CountryName))
-
-```
+t <- comb_df %>% 
+  filter(region_id == "SSF") %>%
+  select(gdp, gdp_growth, gdp_per_capita, u5mr,foreign_direct_investment_net, population_total, population_growth, co2_emissions, cell_subs, consumer_price_index, fertility_rate, enrollment_primary_secondary, enrollment_secondary_school) %>%
+  drop_na() 
 
 
-
-
-
-```{r}
-
-comb_df %>%
-  filter(year > 1965, year < 1975) %>%
-  ggplot() + 
-  geom_point(mapping = aes(x=u5mr, y=growth, color=CountryName))
+comb_df.rcorr = rcorr(as.matrix(t))
+comb_df.rcorr
+    
+    
+comb_cor = cor(t, method = c("spearman"))
+corrplot(comb_cor, title="Coorelation Sub-Saharan Africa")
 
 
 ```
 
 
-The results from Burundi and Nigeria during the 1965 to 1975 timeframe is very interesting. This was the point in time when the mortality rates in Nigeria were dropping faster than the rates in Burundi. The gdp growth rates were almost identical during that timeframe pointing to the potential for another source for the reductions. 
+
+
+```{r}
+
+t <- comb_df %>% 
+  filter(region_id == "NAC") %>%
+  select(gdp, gdp_growth, gdp_per_capita, u5mr,foreign_direct_investment_net, population_total, population_growth, co2_emissions, cell_subs, consumer_price_index, fertility_rate, enrollment_primary_secondary, enrollment_secondary_school) %>%
+  drop_na() 
+
+
+comb_df.rcorr = rcorr(as.matrix(t))
+comb_df.rcorr
+    
+    
+comb_cor = cor(t, method = c("spearman"))
+corrplot(comb_cor, title="Coorelation North America")
+
+
+
+```
+
+
+
+
+```{r}
+
+t <- comb_df %>% 
+  filter(income_group == "Low income") %>%
+  select(gdp, gdp_growth, gdp_per_capita, u5mr,foreign_direct_investment_net, population_total, population_growth, co2_emissions, cell_subs, consumer_price_index, fertility_rate, enrollment_primary_secondary, enrollment_secondary_school) %>%
+  drop_na() 
+
+
+comb_df.rcorr = rcorr(as.matrix(t))
+comb_df.rcorr
+    
+    
+comb_cor = cor(t, method = c("spearman"))
+corrplot(comb_cor, title="Coorelation Low Income Group")
+
+
+
+```
 
 
 
@@ -457,5 +615,22 @@ The results from Burundi and Nigeria during the 1965 to 1975 timeframe is very i
 
 
 
+```{r}
 
+t <- comb_df %>% 
+  filter(income_group == "High income") %>%
+  select(gdp, gdp_growth, gdp_per_capita, u5mr,foreign_direct_investment_net, population_total, population_growth, co2_emissions, cell_subs, consumer_price_index, fertility_rate, enrollment_primary_secondary, enrollment_secondary_school) %>%
+  drop_na() 
+
+
+comb_df.rcorr = rcorr(as.matrix(t))
+comb_df.rcorr
+    
+    
+comb_cor = cor(t, method = c("spearman"))
+corrplot(comb_cor, title="Coorelation High Income Group")
+
+
+
+```
 
