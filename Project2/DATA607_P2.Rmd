@@ -31,6 +31,7 @@ The goal of this assignment is to practice preparing different datasets for down
 *  Global Child Mortality Rates - posted by Alec Mccabe 
 *  COVID-19 Mortality Rates in NYC - William Aiken 
 *  Annual% GDP Growth - ChunJie Nan 
+*  I also added a world bank dataset that includes additional descriptive variables about a country
 
 
 
@@ -46,7 +47,7 @@ This dataset would be a great starting point for analyzing mortality rates for c
 ## Load Data
 Loaded the data from a csv file
 
-```{r}
+```{r include=FALSE}
 # load data
 
 mortality_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/unicef-u5mr.csv")
@@ -65,8 +66,8 @@ meta <- country_meta %>%
 For this analysis i wanted to evaluate the mortality data from three regions. I selected 2 countries from Sub Saharan Africa, Europe and North America. 
 
 Steps
-* clean the country name field
-* added the regional flag to the dataset
+* clean the country name field - the mortality data does not include country code so we need a consistent nameing pattern to connect it with the other datasets
+* join the mortality data set with the combined meta
 * gathered the year data into rows
 * updated the year column to numeric
 * drop all rows with invalid data for u5mr
@@ -104,10 +105,6 @@ ggplot(data = mortality_df) +
     x = "year",
     y = "Mortality"  
   )
-
-
-
-
 
 
 ```
@@ -184,7 +181,9 @@ mortality_df %>%
   
 
 ```
-The regional view of the data shows a similar pattern. All regions are seeing reduced rates of child mortality. With the largest drops in the Sub Saharan Africa region. Interesting to note in the late 60s there was jump in the mortality rate. 
+The regional view of the data shows a similar pattern. We adjusted the timeframe to include only the years where we have full records per region. As whole each region shows decreased child mortality overtime however Sub-Saharan Africa is trailing
+
+
 
 ## Conclusion
 All of the analysis points to the same conclusions. Child mortality has improved over the years however there still remains clear distinctions in mortality levels based on region and income. 
@@ -200,7 +199,7 @@ https://www1.nyc.gov/site/doh/covid/covid-19-data-totals.page
 ## Load Data
 Load data from a csv file
 
-```{r}
+```{r include=FALSE}
 # load data
 
 covid_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/group-data-by-boro.csv")
@@ -287,7 +286,7 @@ covid_df %>%
     )
 
 ```
-The grouped bar chart highlights death rates per age group by borough. As expected the larger boroughs have higher numbers of COVID deaths.
+The age, mortality plot highlight the impact of borough population and age on the number of deaths from covid. We can see boroughs with larger populations see increases in total deaths for older residence. 
 
 
 
@@ -309,7 +308,7 @@ covid_df %>%
   )
 
 ```
-The grouped bar chart highlights death rates per age group by borough.As expected the larger boroughs have higher numbers of COVID hospitalizations.
+The same trend observed with deaths is slightly let pronounced with hospitalization but it still exists. 
 
 
 ```{r}
@@ -325,15 +324,16 @@ covid_df %>%
 
 ```
 
+The grouped bar char show some difference in total deaths by race for each borough. For follow-up analysis it would be good to look at these numbers as a percentage of the population. 
+
+
+## Conclusion 
+This analysis would be more impactful if we reviewed the data using the relative sizes of each population to determine if specific age groups or demographic groups are overly represented in the counts for hospitalizations and deaths. 
 
 
 
 
-
-
-
-
-##Annual% GDP Growth - ChunJie Nan 
+#Annual% GDP Growth - ChunJie Nan 
 
 The GDP growth(annual%) is a data from The World Bank. It includes 266 observations/countries' % annual GDP growth. The data set is tremendous and has some NA/missing values.
 
@@ -355,9 +355,9 @@ https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG
 Load data from a csv file. There is some additional file information at the start of the file so the first line in the file is not a valid list of column names. 
 
 
-```{r}
-# load data
+```{r include=FALSE}
 
+# load gdp data
 gdp_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/gdp_growth.csv",
                  col_names = FALSE,
                  skip_empty_rows = TRUE
@@ -372,17 +372,16 @@ a[4] = "IndicatorCode"
 colnames(gdp_df) <- a 
 
 
-#
+# load world bank data
 wb_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Project2/world_bank_data.csv",
                  skip_empty_rows = TRUE
                  )
-
-
+# clean titles
 wb_df <- wb_df %>% 
   rename_with(~ gsub('\\s', '', .x))
 
 
-
+#update column names
 wb_df <- wb_df %>%
   rename(
     c("SeriesName" = "series_name",
@@ -393,8 +392,7 @@ wb_df <- wb_df %>%
   )
 
       
-      
-
+    
 
 ```
 
@@ -404,12 +402,22 @@ wb_df <- wb_df %>%
 ## Tiddy Data
 I wanted to analyze regional data so i selected 2 countries from Sub Saharan Africa, Europe and North America respectively. This is a similar dataset from the first part of the assignment so we can combine the two data sets to see if there is any correlation. 
 
-The steps taken:filter by the desired countries
-* add region the country list
+The steps taken: clean and filter the world bank data
+* WB DATA select the columns of interest from the world bank data
+* WB DATA gather year columns
+* WB DATA clean the column names
+* WB DATA drop rows with na data
+* WB DATA remove unneeded columns
+* WB DATA transform column data into numberics
+* WB DATA spread the world bank data by value
+* WB_DATA rename columns
+
+The steps taken: clean and filter the gdp data
 * gather the wide year data into rows
-* transform year data into a numeric
-* join the gdp data with the child mortality data from the first part of the assignment
+* drop na data
+* join the gdp data with the world bank data set
 * clean up the rows
+* remove unused columns
 
 ```{r}
 
@@ -491,7 +499,6 @@ comb_df <- gdp_df %>%
 ## Analysis
 
 
-
 ```{r}
 
 comb_df %>%
@@ -518,7 +525,7 @@ ggplot(data = comb_df) +
 
 ```
 
-The growth in gdp by country over the years shows that countries in Europe and North America see more stability in their year over year growth numbers. While countries in Sub-Saharan Africa see a larger fluctuation in GDP. 
+When we graph gdp grow agains child mortality we can see that even at the same growth rate Sub-Saharan African countries have higher child mortality rates. 
 
 
 
@@ -539,8 +546,8 @@ corrplot(comb_cor, title="Coorelation All Records")
 
 
 ```
-If we zoom in to 2020 we can see the impact of COVID on economies across the world. It is interesting that COVID impacted countries in Europ and North America more than it impacted countries in Sub-Saharan Africa.
 
+By surveying a broad set of country variable we can see some interesting correlation. We can see relatively strong negative correlations between child mortality and gpd per capita, co2 emission, cell phone subscriptions and enrollment in seconday school. We can also see strong positive correlations between child mortality and fertility rates.
 
 
 
@@ -565,6 +572,12 @@ corrplot(comb_cor, title="Coorelation Sub-Saharan Africa")
 
 ```
 
+By surveying the Sub-Saharan Africa country variable we can see some interesting correlation. We can see relatively strong negative correlations between enrollment in primary school and enrollment in seconday school. We can also see strong positive correlations between child mortality and fertility rates.
+
+There are also some expected observation
+negative correlation fertility rate and enrollment in primary and secondary school
+positive correlation gdp per capita and enrollment in primary and secondary school
+positive correlation between co2 emissions and gdp per capitat
 
 
 
@@ -586,7 +599,7 @@ corrplot(comb_cor, title="Coorelation North America")
 
 
 ```
-
+When you survey the North American country variable we can see some interesting correlation. We can see relatively strong negative correlations between child mortality and enrollment in secondary school. We can also see strong positive correlations between child mortality and fertility rates.
 
 
 
@@ -608,7 +621,7 @@ corrplot(comb_cor, title="Coorelation Low Income Group")
 
 
 ```
-
+When you survey the low income country the correlations between specific variable are not as pronounced.
 
 
 
@@ -633,4 +646,13 @@ corrplot(comb_cor, title="Coorelation High Income Group")
 
 
 ```
+When you survey the high income country the correlations between specific variable is even lower. With the notable exception of population driving total gdp.
+
+
+## Conclusion
+
+
+
+
+
 
