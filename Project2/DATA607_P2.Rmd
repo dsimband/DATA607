@@ -63,7 +63,7 @@ meta <- country_meta %>%
 
 
 ## Tiddy Data
-For this analysis i wanted to evaluate the mortality data from three regions. I selected 2 countries from Sub Saharan Africa, Europe and North America. 
+For this analysis i wanted to evaluate the mortality data from several countries individually and grouped by region and income level.
 
 Steps
 * clean the country name field - the mortality data does not include country code so we need a consistent nameing pattern to connect it with the other datasets
@@ -189,7 +189,7 @@ The regional view of the data shows a similar pattern. We adjusted the timeframe
 All of the analysis points to the same conclusions. Child mortality has improved over the years however there still remains clear distinctions in mortality levels based on region and income. 
 
 
-#COVID-19 Mortality Rates in NYC
+# COVID-19 Mortality Rates in NYC
 The nyc.gov website has both the hopitalization and mortality rates by county and zip code over time.  It would be interesting to compare the relationship between these two data set.  How it hospitalization and death rates differ by county in NYC?
 
 https://www1.nyc.gov/site/doh/covid/covid-19-data-totals.page
@@ -333,7 +333,7 @@ This analysis would be more impactful if we reviewed the data using the relative
 
 
 
-#Annual% GDP Growth - ChunJie Nan 
+# Annual% GDP Growth - ChunJie Nan 
 
 The GDP growth(annual%) is a data from The World Bank. It includes 266 observations/countries' % annual GDP growth. The data set is tremendous and has some NA/missing values.
 
@@ -400,7 +400,7 @@ wb_df <- wb_df %>%
 
 
 ## Tiddy Data
-I wanted to analyze regional data so i selected 2 countries from Sub Saharan Africa, Europe and North America respectively. This is a similar dataset from the first part of the assignment so we can combine the two data sets to see if there is any correlation. 
+I wanted to analyze the gdp data for each country, regional and income group so i have joined the orignal dataset with a world bank dataset that incldues additional attributes for each country. Also is a similar dataset from the first part of the assignment so we can combine the two data sets to see if there is any correlation. 
 
 The steps taken: clean and filter the world bank data
 * WB DATA select the columns of interest from the world bank data
@@ -650,6 +650,8 @@ When you survey the high income country the correlations between specific variab
 
 
 ## Conclusion
+This initial analysis highlight some potential areas of exploration. It would be interesting to dig deeper into the relationships between gdp and other country attributes for specific groups of countries. It would also be interesting to dig deeper into how the region and income country groups impact the relationship between child mortality an other country attributes. 
+
 
 
 
