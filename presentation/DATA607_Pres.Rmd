@@ -1,5 +1,5 @@
 ---
-title: DATA 607 Preparing Datasets
+title: DATA 607 Presentation - Sentiment Analysis
 author: 'David Simbandumwe'
 date: "`r Sys.Date()`"
 output:
@@ -21,71 +21,88 @@ library (readr)
 library(tidytext)
 library(janeaustenr)
 library(glue)
-
+library(textdata)
+library(ggplot2)
+library(topicmodels)
 
 get_sentiments(lexicon = c("bing", "afinn", "loughran", "nrc"))
 
 ```
 
 
-```{r global}
+
+
+```{r global, include=FALSE}
 
 email_path = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/presentation/email/"
-
+known_emails <- c("dsimbandumwe@gmail.com","ds@gmail.com","return@gmail.com","marketing@mm.com")
 
 ```
 
 
+
+
+
 ```{r functions, include=FALSE}
 
-# write a function that takes the name of a file and returns the # of postive
-# sentiment words, negative sentiment words, the difference & the normalized difference
-GetSentiment <- function(file, path){
-    # get the file
+# get email text    
+GetFile <- function(file, path){
+    
     fileName <- glue(path, file, sep = "")
-    # get rid of any sneaky trailing spaces
     fileName <- trimws(fileName)
     
     # read in the new file
     fileText <- glue(read_file(fileName))
-    # remove any dollar signs (they're special characters in R)
     fileText <- gsub("\\$", "", fileText) 
+    return(fileText)
+}
+
+
+# parse email text for the too field
+GetToEmail <- function(fileText) {
+    s1 <- unlist(str_extract_all(fileText, "^From:\\s*[:graph:]*@[:graph:]*"))
+    s1 <-  str_remove_all(s1, "From:|\\s|\\:|\\<|\\>|\\\"")
+    return (s1)
+}
+
+
+# get the list of related emails
+GetRelatedEmails <- function(fileText, fromEmail, emails) {
     
-    # tokenize
-    tokens <- tibble(text = fileText) %>% unnest_tokens(word, text)
+    str = unlist(regmatches(
+        fileText, gregexpr(
+          "([_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,4}))", fileText)
+        )
+    )
     
-    print(tokens)
-    
-    # get the sentiment from the first text: 
-    sentiment <- tokens %>%
-        inner_join(get_sentiments("bing")) %>% # pull out only sentimen words
-        count(sentiment) %>% # count the # of positive & negative words
-        spread(sentiment, n, fill = 0) %>% # made data wide rather than narrow
-        mutate(sentiment = positive - negative) %>% # # of positive words - # of negative owrds
-        mutate(file = file) %>% # add the name of our file
-        mutate(year = as.numeric(str_match(file, "\\d{4}"))) %>% # add the year
-        mutate(president = str_match(file, "(.*?)_")[2]) # add president
+    str <-  setdiff(str, emails)
+    str <- setdiff(str, fromEmail)
     
     
-    # return our sentiment dataframe
-    return(sentiment)
+    if (str_detect(fileText,"change")) {
+      str <- tibble(str)
+      str <- str %>% 
+        mutate (
+          event = "change address"
+        )
+    }
+    else {
+      str <- tibble(str)
+      str <- str %>% 
+        mutate (
+          event = "other"
+        )
+    }
+
+    
+    return (str)
 }
 
 
 
+# get sentiments
+GetSentiment <- function(fileText, fromEmail) {
 
-
-GetSentiment_af <- function(file, path){
-    # get the file
-    fileName <- glue(path, file, sep = "")
-    # get rid of any sneaky trailing spaces
-    fileName <- trimws(fileName)
-    
-    # read in the new file
-    fileText <- glue(read_file(fileName))
-    # remove any dollar signs (they're special characters in R)
-    fileText <- gsub("\\$", "", fileText) 
-    
     # tokenize
     tokens <- tibble(text = fileText) %>% unnest_tokens(word, text)
     
@@ -98,75 +115,107 @@ GetSentiment_af <- function(file, path){
         summarise(sentiment = sum(value)) %>%
         mutate(method = "AFINN")
     
+    
     # return our sentiment dataframe
+    afinn %>% 
+        mutate (
+            email = fromEmail
+        )
+    
     return(afinn)
+    
 }
+    
+
 
 ```
 
 
 
 # Introduction
-The goal 
+In my last position one of my responsibilities was to advocate for our digital services with our customers. One of the tools we used was email campaigns and mass mailings. My team was responsible for monitoring the responses to our advertising activity and forwarding any complaints to our compliance team to remediation. This was a manual process that took a substantial amount of my team time.
+
+
+
+![Advertising process diagram](./process.png)
 
 
 
 
 
-
-
-
-
-
-
-## Load Data
-Loaded the data from a csv file
+## process the file data
+read all text emails and process the 
 
 ```{r}
 
 files <- list.files(email_path )
+sentiment_df <- tibble(
+  email = character(),
+  sentiment = double(),
+  method = character()
+)
 
-GetSentiment(files[1], path = email_path)
+email_df <- tibble(
+  email = character(),
+  event = character(),
+  related_email = character()
+)
 
+
+for (i in files) {
+  
+  fileText <- GetFile(i,email_path)
+  fromEmail <- GetToEmail(fileText)
+  
+  # get sentiment
+  s_df <- GetSentiment(fileText, fromEmail)
+  s_df <- s_df %>% 
+    mutate (
+      email = fromEmail
+    ) %>% 
+    select (email, sentiment, method)
+    sentiment_df <- union(s_df, sentiment_df)
+    
+  
+
+  
+  # get other emails
+  rel_df <- GetRelatedEmails(fileText, fromEmail, known_emails) 
+  rel_df <- tibble(rel_df) %>% 
+    rename (related_email = str) %>%
+    mutate (
+      email = fromEmail
+    )
+    email_df <- union(email_df, rel_df)
+  
+    
+    
+}
 
 
 
 ```
-
-
-
-```{r}
-
-GetSentiment_af(files[1], path = email_path)
-
-```
-
-## Tiddy Data
-For this analysis i wanted to evaluate the mortality data from three regions. I selected 2 countries from Sub Saharan Africa, Europe and North America. 
-
-Steps
-* Filter the data by selected countries
-
-
-
-
-## Analysis
-
-```{r}
-
-
-
-```
-
-
-
 
 
 
 ## Conclusion
 
+After processioning the 8 emials in the folder we generated the following sentiment scores for each email.
+```{r}
+# sentiment analysis
+sentiment_df
+
+```
 
 
+
+The 8 emails contained the following secondary emails. Processing the text in the email we can map the new email address to an event.
+```{r}
+# email output
+email_df
+
+
+```
 
 
 
