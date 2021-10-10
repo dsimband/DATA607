@@ -1,0 +1,65 @@
+"id","name","score","state","pre_rating","post_rating","op_avg_rating","num_games","elo_post"
+1," GARY HUA                        ",6,"ON ",1794,1817,1605,7,1408
+2," DAKSHESH DARURI                 ",6,"MI ",1553,1663,1469,7,1755
+3," ADITYA BAJAJ                    ",6,"MI ",1384,1640,1564,7,1849
+4," PATRICK H SCHILLING             ",5.5,"MI ",1716,1744,1574,7,1094
+5," HANSHI ZUO                      ",5.5,"MI ",1655,1690,1501,7,1009
+6," HANSEN SONG                     ",5,"OH ",1686,1687,1519,7,1266
+7," GARY DEE SWATHELL               ",5,"MI ",1649,1673,1372,7,1544
+8," EZEKIEL HOUGHTON                ",5,"MI ",1641,1657,1468,7,1640
+9," STEFANO LEE                     ",5,"ON ",1411,1564,1523,7,1695
+10," ANVIT RAO                       ",5,"MI ",1365,1544,1554,7,1256
+11," CAMERON WILLIAM MC LEMAN        ",4.5,"MI ",1712,1696,1468,7,1379
+12," KENNETH J TACK                  ",4.5,"MI ",1663,1670,1506,6,1065
+13," TORRANCE HENRY JR               ",4.5,"MI ",1666,1662,1498,7,1376
+14," BRADLEY SHAW                    ",4.5,"MI ",1610,1618,1515,7,1408
+15," ZACHARY JAMES HOUGHTON          ",4.5,"MI ",1220,1416,1484,7,1375
+16," MIKE NIKITIN                    ",4,"MI ",1604,1613,1386,5,1273
+17," RONALD GRZEGORCZYK              ",4,"MI ",1629,1610,1499,7,1556
+18," DAVID SUNDEEN                   ",4,"MI ",1600,1600,1480,7,1537
+19," DIPANKAR ROY                    ",4,"MI ",1564,1570,1426,7,1094
+20," JASON ZHENG                     ",4,"MI ",1595,1569,1411,7,1468
+21," DINH DANG BUI                   ",4,"ON ",1563,1562,1470,7,1528
+22," EUGENE L MCCLURE                ",4,"MI ",1555,1529,1300,6,1211
+23," ALAN BUI                        ",4,"ON ",1363,1371,1214,7,1271
+24," MICHAEL R ALDRICH               ",4,"MI ",1229,1300,1357,7,1414
+25," LOREN SCHWIEBERT                ",3.5,"MI ",1745,1681,1363,7,1163
+26," MAX ZHU                         ",3.5,"ON ",1579,1564,1507,7,1301
+27," GAURAV GIDWANI                  ",3.5,"MI ",1552,1539,1222,6,1020
+28," SOFIA ADINA STANESCU-BELLU      ",3.5,"MI ",1507,1513,1522,7,860
+29," CHIEDOZIE OKORIE                ",3.5,"MI ",1602,1508,1314,6,1099
+30," GEORGE AVERY JONES              ",3.5,"ON ",1522,1444,1144,7,978
+31," RISHI SHETTY                    ",3.5,"MI ",1494,1444,1260,7,1090
+32," JOSHUA PHILIP MATHEWS           ",3.5,"ON ",1441,1433,1379,7,1153
+33," JADE GE                         ",3.5,"MI ",1449,1421,1277,7,1083
+34," MICHAEL JEFFERY THOMAS          ",3.5,"MI ",1399,1400,1375,7,1126
+35," JOSHUA DAVID LEE                ",3.5,"MI ",1438,1392,1150,7,1016
+36," SIDDHARTH JHA                   ",3.5,"MI ",1355,1367,1388,6,896
+37," AMIYATOSH PWNANANDAM            ",3.5,"MI ",980,1077,1385,5,1305
+38," BRIAN LIU                       ",3,"MI ",1423,1439,1539,6,1187
+39," JOEL R HENDON                   ",3,"MI ",1436,1413,1430,7,1372
+40," FOREST ZHANG                    ",3,"MI ",1348,1346,1391,7,1333
+41," KYLE WILLIAM MURPHY             ",3,"MI ",1403,1341,1248,4,1248
+42," JARED GE                        ",3,"MI ",1332,1256,1150,7,818
+43," ROBERT GLEN VASEY               ",3,"MI ",1283,1244,1107,7,1049
+44," JUSTIN D SCHILLING              ",3,"MI ",1199,1199,1327,6,1194
+45," DEREK YAN                       ",3,"MI ",1242,1191,1152,7,787
+46," JACOB ALEXANDER LAVALLEY        ",3,"MI ",377,1076,1358,7,1301
+47," ERIC WRIGHT                     ",2.5,"MI ",1362,1341,1392,7,1133
+48," DANIEL KHAIN                    ",2.5,"MI ",1382,1335,1356,5,1009
+49," MICHAEL J MARTIN                ",2.5,"MI ",1291,1259,1286,5,738
+50," SHIVAM JHA                      ",2.5,"MI ",1056,1111,1296,6,1163
+51," TEJAS AYYAGARI                  ",2.5,"MI ",1011,1097,1356,7,1047
+52," ETHAN GUO                       ",2.5,"MI ",935,1092,1495,7,755
+53," JOSE C YBARRA                   ",2,"MI ",1393,1359,1345,3,1212
+54," LARRY HODGE                     ",2,"MI ",1270,1200,1206,6,940
+55," ALEX KONG                       ",2,"MI ",1186,1163,1406,6,683
+56," MARISA RICCI                    ",2,"MI ",1153,1140,1414,5,1174
+57," MICHAEL LU                      ",2,"MI ",1092,1079,1363,6,1096
+58," VIRAJ MOHILE                    ",2,"MI ",917,941,1391,6,1124
+59," SEAN M MC CORMICK               ",2,"MI ",853,878,1319,6,1052
+60," JULIA SHEN                      ",1.5,"MI ",967,984,1330,5,575
+61," JEZZEL FARKAS                   ",1.5,"ON ",955,979,1327,7,908
+62," ASHWIN BALAJI                   ",1,"MI ",1530,1535,1186,1,1586
+63," THOMAS JOSEPH HOSMER            ",1,"MI ",1175,1125,1350,5,772
+64," BEN LI                          ",1,"MI ",1163,1112,1263,7,575
