@@ -3,7 +3,7 @@
   <book>
     <title>This Time is Different</title>
     <sub_title>Eight Centuries of Financial Folly</sub_title>
-    <author>Carmen M. Reinhart & Kenneth S Rogoff</author>
+    <author>Carmen M. Reinhart &amp; Kenneth S Rogoff</author>
     <year_published>2009</year_published>
     <length>463</length>
     <price>35.00</price>
@@ -19,7 +19,7 @@
   <book>
     <title>Market Neutral Strategies</title>
     <sub_title></sub_title>
-    <author>Bruce I. Jacobs & Kenneth N. Levy</author>
+    <author>Bruce I. Jacobs &amp; Kenneth N. Levy</author>
     <year_published>2005</year_published>
     <length>284</length>
     <price>80.00</price>
