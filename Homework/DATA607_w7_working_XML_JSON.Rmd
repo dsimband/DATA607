@@ -1,14 +1,16 @@
 ---
-title: "Introducing Data Shaping and Transformation"
+title: "DATA607_w7 - Working with XML and JSON in R"
 author: "David Simbandumwe"
 date: "`r Sys.Date()`"
 output:
-#  pdf_document:
-#    latex_engine: xelatex
-#    extra_dependencies: ["geometry", "multicol", "multirow"]
-#  prettydoc::html_pretty:
-#    theme: architect
-#    highlight: github
+  pdf_document:
+    latex_engine: xelatex
+    extra_dependencies:
+    - geometry
+    - multicol
+    - multirow
+  html_document:
+    df_print: paged
   rmdformats::robobook:
     highlight: kate
 ---
@@ -39,7 +41,7 @@ Your deliverable is the three source files and the R code. If you can, package y
 
 
 # HTML
-Publishing the file html file to the github wiki creates issues when trying to read the file. So I simplified the example and uses a file in my local directory.
+
 
 ```{r}
 
@@ -85,7 +87,11 @@ curl_download(url = xml_url,
               destfile = xml_file
               )
 # load file as xml
-xml_df <- xmlToDataFrame(xml_file)
+xml_df <- xmlToDataFrame(xml_file) %>%
+        transform(year_published = as.numeric(year_published), 
+              length = as.numeric(length),
+              price = as.numeric(price)
+              )
  
 xml_df
 
@@ -99,8 +105,11 @@ json_url <- "https://raw.githubusercontent.com/dsimband/DATA607/main/Homework/w7
 
 json_df = fromJSON(json_url,
                    simplifyDataFrame = TRUE
-  #                 flatten = TRUE
-                   )$books$book
+                   )$books$book %>%
+    transform(year_published = as.numeric(year_published), 
+              length = as.numeric(length),
+              price = as.numeric(price)
+              )
 
 json_df
 
@@ -108,7 +117,7 @@ json_df
 ```
 
 # Conclusions
-The data frames are identical
+The data frames are identical with the exception of special characters such as & for the HTML and the XML versions of the files we had to use &amp; to represent &. Working with JSON is definitely cleaner from a separation of data and presentation logic perspective. HTML and XML still contain formating data and tend to be verbose for big datasets. It is also easier because you can read the file contents directly from git hub without having to create a intermediate file 
 
 
 
