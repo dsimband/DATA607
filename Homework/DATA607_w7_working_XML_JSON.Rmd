@@ -19,19 +19,44 @@ rm(list=ls())
 library(tidyverse)
 library(knitr)
 library(XML)
+library(curl)
 library(RCurl)
 library(jsonlite)
 
 ```
 
 
+# Introduction
+Pick three of your favorite books on one of your favorite subjects. At least one of the books should have more than one author. For each book, include the title, authors, and two or three other attributes that you find interesting.
+
+Take the information that you’ve selected about these three books, and separately create three files which store the book’s information in HTML (using an html table), XML, and JSON formats (e.g. “books.html”, “books.xml”, and “books.json”). To help you better understand the different file structures, I’d prefer that you create each of these files “by hand” unless you’re already very comfortable with the file formats.
+
+Write R code, using your packages of choice, to load the information from each of the three sources into separate R data frames. Are the three data frames identical?
+
+Your deliverable is the three source files and the R code. If you can, package your assignment solution up into an .Rmd file and publish to rpubs.com. [This will also require finding a way to make your three text files accessible from the web].
+
+
+
+
 # HTML
+Publishing the file html file to the github wiki creates issues when trying to read the file. So I simplified the example and uses a file in my local directory.
+
 ```{r}
 
-html_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.html"
+# setup files
+html_url <- "https://raw.githubusercontent.com/dsimband/DATA607/main/Homework/w7_files/books.html"
+html_file <- tempfile()
+ 
 
-html_df <- readHTMLTable(html_url, 
-                         header=TRUE, 
+# download file to temp directory
+curl_download(url = html_url, 
+              destfile = html_file
+              )
+              
+              
+# read file as html
+html_df <- readHTMLTable(html_file, 
+                        header=TRUE, 
                          which = 1,
                          as.data.frame = TRUE,
                          colClasses = c("character",
@@ -50,9 +75,17 @@ html_df
 # XML
 ```{r}
 
-xml_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.xml"
+# setup files
+xml_url <- "https://raw.githubusercontent.com/dsimband/DATA607/main/Homework/w7_files/books.xml"
+xml_file <- tempfile()
+ 
 
-xml_df <- xmlToDataFrame(xml_url)
+# download file to temp directory
+curl_download(url = xml_url, 
+              destfile = xml_file
+              )
+# load file as xml
+xml_df <- xmlToDataFrame(xml_file)
  
 xml_df
 
@@ -62,7 +95,7 @@ xml_df
 
 ```{r}
 
-json_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.json"
+json_url <- "https://raw.githubusercontent.com/dsimband/DATA607/main/Homework/w7_files/books.json"
 
 json_df = fromJSON(json_url,
                    simplifyDataFrame = TRUE
@@ -74,7 +107,8 @@ json_df
 
 ```
 
-
+# Conclusions
+The data frames are identical
 
 
 
