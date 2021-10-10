@@ -3,23 +3,22 @@ title: DATA 607 Presentation - Sentiment Analysis
 author: 'David Simbandumwe'
 date: "`r Sys.Date()`"
 output:
+  html_document:
+    df_print: paged
   pdf_document:
     extra_dependencies:
     - geometry
     - multicol
     - multirow
-  html_document:
-    df_print: paged
 ---
 
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(stringr)
 library (readr)
 library(tidytext)
-library(janeaustenr)
 library(glue)
 library(textdata)
 library(ggplot2)
@@ -32,7 +31,7 @@ get_sentiments(lexicon = c("bing", "afinn", "loughran", "nrc"))
 
 
 
-```{r global, include=FALSE}
+```{r global}
 
 email_path = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/presentation/email/"
 known_emails <- c("dsimbandumwe@gmail.com","ds@gmail.com","return@gmail.com","marketing@mm.com")
@@ -43,7 +42,7 @@ known_emails <- c("dsimbandumwe@gmail.com","ds@gmail.com","return@gmail.com","ma
 
 
 
-```{r functions, include=FALSE}
+```{r functions}
 
 # get email text    
 GetFile <- function(file, path){

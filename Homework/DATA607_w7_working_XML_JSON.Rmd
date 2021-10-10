@@ -1,0 +1,89 @@
+---
+title: "Introducing Data Shaping and Transformation"
+author: "David Simbandumwe"
+date: "`r Sys.Date()`"
+output:
+#  pdf_document:
+#    latex_engine: xelatex
+#    extra_dependencies: ["geometry", "multicol", "multirow"]
+#  prettydoc::html_pretty:
+#    theme: architect
+#    highlight: github
+  rmdformats::robobook:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(tidyverse)
+library(knitr)
+library(XML)
+library(RCurl)
+library(jsonlite)
+
+```
+
+
+# HTML
+```{r}
+
+html_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.html"
+
+html_df <- readHTMLTable(html_url, 
+                         header=TRUE, 
+                         which = 1,
+                         as.data.frame = TRUE,
+                         colClasses = c("character",
+                                        "character",
+                                        "character",
+                                        "numeric",
+                                        "numeric",
+                                        "numeric")
+                         )
+
+html_df
+
+```
+
+
+# XML
+```{r}
+
+xml_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.xml"
+
+xml_df <- xmlToDataFrame(xml_url)
+ 
+xml_df
+
+```
+
+# JSON
+
+```{r}
+
+json_url <- "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/books.json"
+
+json_df = fromJSON(json_url,
+                   simplifyDataFrame = TRUE
+  #                 flatten = TRUE
+                   )$books$book
+
+json_df
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

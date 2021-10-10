@@ -59,11 +59,11 @@ df <- df  %>%
   )
 
 # write the start file
-write.csv(df, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/israeli_vaccination_data_analysis_start.csv", row.names=FALSE)
+write.csv(df, "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/w5_files/israeli_vaccination_data_analysis_start.csv", row.names=FALSE)
 
 
 # read csv from 
-vax_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/israeli_vaccination_data_analysis_start.csv")
+vax_df <- read_csv( file = "/Users/dsimbandumwe/dev/cuny/data_607/DATA607/Homework/w5_files/israeli_vaccination_data_analysis_start.csv")
 
 ```
 
