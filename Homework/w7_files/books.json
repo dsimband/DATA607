@@ -1,0 +1,30 @@
+{
+  "books": {
+    "book": [
+      {
+        "title": "This Time is Different",
+        "sub_title": "Eight Centuries of Financial Folly",
+        "author": "Carmen M. Reinhart &amp; Kenneth S Rogoff",
+        "year_published": "2009",
+        "length": "463",
+        "price": "35.00"
+      },
+      {
+        "title": "Capital",
+        "sub_title": "in the Twenty_First Century",
+        "author": "Thomas Piketty",
+        "year_published": "2014",
+        "length": "685",
+        "price": "39.95"
+      },
+      {
+        "title": "Market Neutral Strategies",
+        "sub_title": "",
+        "author": "Bruce I. Jacobs &amp; Kenneth N. Levy",
+        "year_published": "2005",
+        "length": "284",
+        "price": "80.00"
+      }
+    ]
+  }
+}

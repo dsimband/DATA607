@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<books>
+  <book>
+    <title>This Time is Different</title>
+    <sub_title>Eight Centuries of Financial Folly</sub_title>
+    <author>Carmen M. Reinhart &amp; Kenneth S Rogoff</author>
+    <year_published>2009</year_published>
+    <length>463</length>
+    <price>35.00</price>
+  </book>
+  <book>
+    <title>Capital</title>
+    <sub_title>in the Twenty_First Century</sub_title>
+    <author>Thomas Piketty</author>
+    <year_published>2014</year_published>
+    <length>685</length>
+    <price>39.95</price>
+  </book>
+  <book>
+    <title>Market Neutral Strategies</title>
+    <sub_title></sub_title>
+    <author>Bruce I. Jacobs &amp; Kenneth N. Levy</author>
+    <year_published>2005</year_published>
+    <length>284</length>
+    <price>80.00</price>
+  </book>
+</books>
