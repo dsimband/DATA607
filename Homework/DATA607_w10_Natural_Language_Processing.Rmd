@@ -2,13 +2,25 @@
 title: "DATA607 Natural Language Processing"
 date: "`r Sys.Date()`"
 output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
   html_document:
-    toc: true
+    toc: yes
     toc_depth: 2
     theme: united
     highlight: tango
-    
 ---
+
+
+# Introduction
+In this assignment I will be replicating the Sentiment Analysis example from Chapter 2. I will also be extending the example to include another corpus using a new lexicon. For the purposes of this assignment I have selected a the 2009 State of the Union Address and the Syuzhet lexicon.
+
+- Corpus - I selected my corpus from a Kaggle data set that captures State of the Union Addresses from 1790 - 2018.  https://www.kaggle.com/rtatman/tutorial-sentiment-analysis-in-r/data
+- Lexicon - I selected the from the syuzhet sentiment extractor from the Syuzhet package https://cran.r-project.org/web/packages/syuzhet/vignettes/syuzhet-vignette.html
+
+
+
 
 ```{r setup, include=FALSE}
 ## Global options
@@ -23,29 +35,34 @@ library(stringr)
 library(tidyr)
 library(ggplot2)
 library(wordcloud)
+library(wordcloud2)
 library(reshape2)
 
 library(readr)
-
 library(SnowballC)
+library(lexicon)
+library(syuzhet)
 
 ```
 
 
+
+
+# Chapter 2 Sentient Analysis Example
+This section recreates the sentiment analysis example in chapter 2 of the Text Minging with R textbook. It includes examples of 3 different lexicons bing, afinn and nrc.
+
+
+
+
+```{r}
 #***************************************************************************************
 #    Title: Text Mining with R : 02-sentiment-analysis
 #    Author: Julia Silge and David Robinson
 #    Date: Apr 6, 2021
 #    Code version: #93
 #    Availability: https://github.com/dgrtwo/tidy-text-mining/blob/master/02-sentiment-analysis.Rmd
-#
 #***************************************************************************************/
 
-
-
-
-
-```{r}
 get_sentiments("afinn")
 get_sentiments("bing")
 get_sentiments("nrc")
@@ -203,28 +220,20 @@ tidy_books %>%
 ```
 
 
+
 ```{r}
 
-
-tidy_books %>%
-  inner_join(get_sentiments("bing")) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
-  comparison.cloud(colors = c("gray20", "gray80"),
-                   max.words = 100)
-
-
-
-
+#***************************************************************************************
+#    Title: Text Mining with R : 02-sentiment-analysis
+#    End of Code block
+#***************************************************************************************/
 
 ```
 
 
 
-
-
-
-
+# Import data
+I imported the data directly from the Kaggle's Google repository. I divided the speech up into sentences for the initial analysis.
 
 ```{r}
 
@@ -233,6 +242,18 @@ file <- "https://storage.googleapis.com/kagglesdsdata/datasets/1660/2921/Obama_2
 
 state_df <- read_delim(file, delim = "\\." , col_names = c("value"))
 
+
+```
+
+
+
+# Tiddy and Tranform Data
+The text data is clean but I added a line number for future reference.
+- add line number
+- unnest tokens - each row will represent a single word
+- filter out stop words
+
+```{r}
 
 
 # add columns
@@ -254,26 +275,63 @@ pres_stop_words <- bind_rows(
 state_df <- state_df %>%
   anti_join(pres_stop_words)
     
+```
 
 
-# add sentiments and stem words
+
+
+# Modeling
+The Syuzhut lexicon returns a vector of sentiment scores that includes 0.0 values. I filtered these scores out because they did not add to the analysis. I also tried to map the same sentiment scores to sentiment scores for afinn lexicon 
+- get sentiment from syuzhet lexicon
+- get sentiment from afinn lexicon
+- get stem word sentiment from syuzhet lexicon
+- calculate word data frame
+- calculate z scores for comparison purposes
+
+
+```{r}
+
+
+
+# add the syuzhet sentiment
+state_df$value_syuzhet <-  get_sentiment(state_df$word, method="syuzhet")
+state_df <- state_df %>% filter(value_syuzhet != 0)
+
+
+# add sentiments and stem words (afinn)
 state_df <- state_df %>%
-    inner_join(get_sentiments("afinn")) %>%
-    group_by(word) %>%
+    left_join(get_sentiments("afinn")) %>%
     mutate(
-      stem = wordStem(word),
-      freq = n()
+      stem = wordStem(word)
+    )
+
+
+# add sentiments for stem words (afinn)
+state_df$value_stem <-  get_sentiment(state_df$stem, method="syuzhet")
+
+
+# create a word based dataframe
+word_df <- state_df %>%
+    select(-c(line_num,stem, value_stem)) %>%
+    group_by(word) %>%
+    mutate (
+        freq = n(),
+        val_freq = value * freq,
     ) %>%
-    distinct() %>%
-    arrange(freq)
+    distinct()
 
 
-# add entiments for stem words
-state_df <- state_df %>%
-    left_join(get_sentiments("afinn"), by=c("stem" = "word") ) %>%
-    rename(
-        value = value.x,
-        value_stem = value.y
+# calculate the z values for comparision
+m_value <- mean(word_df$value, na.rm = TRUE)
+sd_value  <- sd(word_df$value, na.rm = TRUE)
+m_value_syuzhet <- mean(word_df$value_syuzhet)
+sd_value_syuzhet <- sd(word_df$value_syuzhet)
+
+word_df <- word_df %>%
+    mutate(
+        z_value = (value - m_value) / sd_value,
+        z_value_syuzhet = (value_syuzhet - m_value_syuzhet) / sd_value_syuzhet,
+        z_diff = z_value - z_value_syuzhet
     )
 
 
@@ -282,121 +340,87 @@ state_df <- state_df %>%
 
 
 
+# Visualize (full speach)
+The sentiment for the full state of the union narrative seems to capture the somber tone that was in the country at the time. With the Financial system and the housing market still in crisis the speech starts on a somber note but increases in positive before settling at a neutral tone. This is also reflected in the word cloud with a balance of negative words debt, crisis, recession with positive words such as opportunity, confidence and care
+
 ```{r}
 
-ggplot(x, aes(word, value)) +
+simple_plot(state_df$value_syuzhet,
+            title = "Sentiment Analysis of the State of the Union Address 2009",
+            legend_pos = "topleft"
+            )
+
+
+
+```
+
+
+
+```{r}
+
+state_df %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100, random.color=TRUE))
+
+  
+```
+
+
+
+
+
+
+# visualization of word choice
+The whole speech had an emphasis on Care. It is the biggest work in the word cloud and if you look a frequency and sentiment it is by far the focus of the speech follow by crisis and recession. 
+
+
+
+```{r}
+
+word_df %>%   
+ggplot(aes(word, value_syuzhet*freq)) +
     geom_col(show.legend = FALSE) +
     scale_fill_viridis_c() + 
     theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank())
 
+# words that are outliers in terms of sentiment and frequencey
+word_df %>%
+filter(abs(value_syuzhet*freq) > 2) %>%
+ggplot(aes(word, value_syuzhet*freq)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    scale_fill_viridis_c() + 
+    theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_text()) 
 
-x %>%
-filter(value < -2 | value > 2) %>%
-ggplot(aes(x = word, y = value , fill=value)) +
-    geom_bar(stat = "identity") +
-    coord_polar(start = -10) +
-    ylim(-5, 10) +
-    theme(axis.text = element_text(),
-        axis.title = element_text(),
-        panel.grid = element_line(),
-        axis.ticks = element_line(),
-)
 
 
 ```
 
 
+
+# comparison of lexicons (afinn vs syuzhet)
+Calculating the z scores for each word sentiment values allow us to compare the relative sentiment scores by each lexicon using the same scale. What we can see is that the difference lexicons had discrepancies with the following words. With Afinn lexicon being more positive for words to the right of 0 and Syushet being more positive for word on the left of zero. Given this variability it is important to test more than on lexicon.
 
 ```{r}
-
-
-pres_stop_words <- bind_rows(
-    tibble(word = c("miss"),  
-    lexicon = c("pres")), 
-    stop_words
-)
-
-
-x4 <- x %>%
-  anti_join(pres_stop_words)
-
-
-library(SnowballC)
-
-x4 <- x4 %>%
-    group_by(value) %>%
-    mutate(
-      stem = wordStem(word),
-      freq = n()
-    ) %>%
-    distinct() %>%
-    arrange(freq)
-
-
-
+# words that are outliers in terms of sentiment and frequencey
+word_df %>%
+filter(abs(z_diff) > .8) %>%
+ggplot(aes(word, z_diff)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    scale_fill_viridis_c() + 
+    theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_text()) 
 ```
 
 
 
 
 
-
-```{r}
-
-library(tm) # text mining
-library(lexicon) # sentiment lexicons
-library(wordcloud) # visualization
-library(irr) # inter-rater reliability for lexicons
-library(textstem) # stemming and lemmatization (example purposes only)
-library(syuzhet) # sentiment lexicons and analysis
-
-load("SA_lexicons.RData")
-
-
-x1 <- readXML("")
-
-
-file_infor <- readRDS(file = "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/nrc_emotions.rda")
-
-load(file = "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/freq_first_names.rda")
-
-```
-
-# XML
-```{r}
-
-library(curl)
-library(RCurl)
-library(XML)
-
-# setup files
-xml_url <- "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/freq_first_names.rda"
-xml_file <- tempfile()
-
-xml_file <- "./tmp.rda" 
-
-# download file to temp directory
-curl_download(url = xml_url, 
-              destfile = xml_file
-              )
-
-load(file=xml_file)
-
-file_infor <- readRDS(xml_file)
-
-
-# load file as xml
-xml_df <- xmlToDataFrame(xml_file) %>%
-        transform(year_published = as.numeric(year_published), 
-              length = as.numeric(length),
-              price = as.numeric(price)
-              )
- 
-xml_df
-
-```
-
+# Conclusion
+The exercise highlighted a few areas of sentiment analysis that I wanted to focus on. Since I was working with a speech I started with the overall flow. Looking at how the sentiment changed overtime as the speech progressed. The sentiment scores seem consistent with the narrative arch of the speech. I also looked at the content overall focusing on word choice and frequency of word usage. It was interesting to see the focus on "Care" as a consistent theme across the speech. It seems like stem analysis added very little to the overall analysis. There was a low percentage of matches for the stem words. I would like to explore ways to increase the relevance of this analysis going forward. 
 
 
 
@@ -405,7 +429,12 @@ xml_df
 
 
 # References
-Silge, J and Robinson, D (2017) Text Mining with R: 02-sentiment-analysis (3) [source Code]. https://github.com/dgrtwo/tidy-text-mining/blob/master/02-sentiment-analysis.Rmd
+- Silge, J and Robinson, D (2017) Text Mining with R: 02-sentiment-analysis (3) [source Code]. https://github.com/dgrtwo/tidy-text-mining/blob/master/02-sentiment-analysis.Rmd
+- Tatman, R (2017) Tutorial: Sentiment Analysis in R: State of the Union Corpus (1790 - 2018) (8) [Dataset]. https://www.kaggle.com/rtatman/tutorial-sentiment-analysis-in-r/notebook
+
+
+
+
 
 
 
