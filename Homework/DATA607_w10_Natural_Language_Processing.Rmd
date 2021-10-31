@@ -1,0 +1,411 @@
+---
+title: "DATA607 Natural Language Processing"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: united
+    highlight: tango
+    
+---
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+rm(list=ls())
+
+# load packages
+library(tidytext)
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(ggplot2)
+library(wordcloud)
+library(reshape2)
+
+library(readr)
+
+library(SnowballC)
+
+```
+
+
+#***************************************************************************************
+#    Title: Text Mining with R : 02-sentiment-analysis
+#    Author: Julia Silge and David Robinson
+#    Date: Apr 6, 2021
+#    Code version: #93
+#    Availability: https://github.com/dgrtwo/tidy-text-mining/blob/master/02-sentiment-analysis.Rmd
+#
+#***************************************************************************************/
+
+
+
+
+
+```{r}
+get_sentiments("afinn")
+get_sentiments("bing")
+get_sentiments("nrc")
+
+```
+
+
+
+
+
+```{r}
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+        linenumber = row_number(),
+        chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+        ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+nrcjoy <- get_sentiments("nrc") %>%
+  filter(sentiment == "joy")
+
+tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrcjoy) %>%
+  count(word, sort = TRUE)
+
+
+```
+
+
+
+
+```{r}
+
+
+janeaustensentiment <- tidy_books %>%
+    inner_join(get_sentiments("bing")) %>%
+    count(book, index = linenumber %/% 80, sentiment) %>%
+    spread(sentiment, n, fill = 0) %>%
+    mutate(sentiment = positive - negative)
+
+
+ggplot(janeaustensentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+
+
+
+```
+
+
+```{r}
+
+pride_prejudice <- tidy_books %>%
+  filter(book == "Pride & Prejudice")
+
+pride_prejudice
+
+afinn <- pride_prejudice %>%
+  inner_join(get_sentiments("afinn")) %>%
+  group_by(index = linenumber %/% 80) %>%
+  summarise(sentiment = sum(value)) %>%
+  mutate(method = "AFINN")
+
+bing_and_nrc <- bind_rows(
+    pride_prejudice %>%
+        inner_join(get_sentiments("bing")) %>%
+        mutate(method = "Bing et al."),
+    pride_prejudice %>%
+        inner_join(get_sentiments("nrc") %>%
+                 filter(sentiment %in% c("positive",
+                                         "negative"))) %>%
+    mutate(method = "NRC")) %>%
+    count(method, index = linenumber %/% 80, sentiment) %>%
+    spread(sentiment, n, fill = 0) %>%
+    mutate(sentiment = positive - negative)
+
+
+bind_rows(afinn, bing_and_nrc) %>%
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y")
+
+
+get_sentiments("nrc") %>%
+    filter(sentiment %in% c("positive","negative")) %>%
+    count(sentiment)
+
+get_sentiments("bing") %>%
+  count(sentiment)
+
+
+
+```
+
+
+
+
+
+```{r}
+bing_word_counts <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+bing_word_counts
+
+bing_word_counts %>%
+    group_by(sentiment) %>%
+    top_n(10) %>%
+    ungroup() %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(word, n, fill = sentiment)) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~sentiment, scales = "free_y") +
+    labs(y = "Contribution to sentiment",x = NULL) +
+    coord_flip()
+
+
+
+
+```
+
+
+
+
+```{r}
+custom_stop_words <- bind_rows(data_frame(
+                            word = c("miss"),
+                            lexicon = c("custom")),
+                            stop_words)
+
+custom_stop_words
+
+
+
+
+```
+
+
+
+
+```{r}
+
+
+tidy_books %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+
+
+```
+
+
+```{r}
+
+
+tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+```{r}
+
+
+file <- "https://storage.googleapis.com/kagglesdsdata/datasets/1660/2921/Obama_2009.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20211031%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20211031T015335Z&X-Goog-Expires=259199&X-Goog-SignedHeaders=host&X-Goog-Signature=95ba89f675fc7648f5011505375b91caae8f48d9c9b3330c50d284869d16106771e5caff376a85ac71e6944a44e82e46578f5e89aed4119a729bd890c7ac945572805d0bf2a2568aa1c35604b8f8d633071b2cf95134a9fdb8061368b26259d507b1571dbe63a66a1da4b012f710c8d3f3d8dd443ba50f20d501060bf8b3f94ab4b35f5311536ca4a7278c2ea07f54a2431c6f59d1cbff2667026088c6290f0dbfc0076edea6fdefd2439e114958a423dd5351069edf1007c515b296d1e1e7f262818e35d4743af6e935bb12947a0fb342221dfb5e786c7a690c3e4c37dc36ca32d2da6554a64da55ba7ba76028c33fb2e05e41a0830d77043450033a3e37e0b"
+
+state_df <- read_delim(file, delim = "\\." , col_names = c("value"))
+
+
+
+# add columns
+state_df <- state_df %>% 
+    mutate(
+        line_num = row_number()
+    ) %>%
+  unnest_tokens(word, value)
+
+        
+
+# filter stop words
+pres_stop_words <- bind_rows(
+    tibble(word = c("miss"),  
+    lexicon = c("pres")), 
+    stop_words
+)
+
+state_df <- state_df %>%
+  anti_join(pres_stop_words)
+    
+
+
+# add sentiments and stem words
+state_df <- state_df %>%
+    inner_join(get_sentiments("afinn")) %>%
+    group_by(word) %>%
+    mutate(
+      stem = wordStem(word),
+      freq = n()
+    ) %>%
+    distinct() %>%
+    arrange(freq)
+
+
+# add entiments for stem words
+state_df <- state_df %>%
+    left_join(get_sentiments("afinn"), by=c("stem" = "word") ) %>%
+    rename(
+        value = value.x,
+        value_stem = value.y
+    )
+
+
+```
+
+
+
+
+```{r}
+
+ggplot(x, aes(word, value)) +
+    geom_col(show.legend = FALSE) +
+    scale_fill_viridis_c() + 
+    theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank())
+
+
+x %>%
+filter(value < -2 | value > 2) %>%
+ggplot(aes(x = word, y = value , fill=value)) +
+    geom_bar(stat = "identity") +
+    coord_polar(start = -10) +
+    ylim(-5, 10) +
+    theme(axis.text = element_text(),
+        axis.title = element_text(),
+        panel.grid = element_line(),
+        axis.ticks = element_line(),
+)
+
+
+```
+
+
+
+```{r}
+
+
+pres_stop_words <- bind_rows(
+    tibble(word = c("miss"),  
+    lexicon = c("pres")), 
+    stop_words
+)
+
+
+x4 <- x %>%
+  anti_join(pres_stop_words)
+
+
+library(SnowballC)
+
+x4 <- x4 %>%
+    group_by(value) %>%
+    mutate(
+      stem = wordStem(word),
+      freq = n()
+    ) %>%
+    distinct() %>%
+    arrange(freq)
+
+
+
+```
+
+
+
+
+
+
+```{r}
+
+library(tm) # text mining
+library(lexicon) # sentiment lexicons
+library(wordcloud) # visualization
+library(irr) # inter-rater reliability for lexicons
+library(textstem) # stemming and lemmatization (example purposes only)
+library(syuzhet) # sentiment lexicons and analysis
+
+load("SA_lexicons.RData")
+
+
+x1 <- readXML("")
+
+
+file_infor <- readRDS(file = "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/nrc_emotions.rda")
+
+load(file = "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/freq_first_names.rda")
+
+```
+
+# XML
+```{r}
+
+library(curl)
+library(RCurl)
+library(XML)
+
+# setup files
+xml_url <- "https://github.com/trinker/lexicon/blob/6fab24027f60be4f42535fa7128b3c2a6945c9e7/data/freq_first_names.rda"
+xml_file <- tempfile()
+
+xml_file <- "./tmp.rda" 
+
+# download file to temp directory
+curl_download(url = xml_url, 
+              destfile = xml_file
+              )
+
+load(file=xml_file)
+
+file_infor <- readRDS(xml_file)
+
+
+# load file as xml
+xml_df <- xmlToDataFrame(xml_file) %>%
+        transform(year_published = as.numeric(year_published), 
+              length = as.numeric(length),
+              price = as.numeric(price)
+              )
+ 
+xml_df
+
+```
+
+
+
+
+
+
+
+
+# References
+Silge, J and Robinson, D (2017) Text Mining with R: 02-sentiment-analysis (3) [source Code]. https://github.com/dgrtwo/tidy-text-mining/blob/master/02-sentiment-analysis.Rmd
+
+
+
