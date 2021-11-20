@@ -1,0 +1,382 @@
+---
+title: "DATA 607 Project 4: Document Classification"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1234)
+
+library(tidyverse)
+library(tidymodels)
+library(tidytext)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(naivebayes)
+library(stringr)
+
+library(vip)
+
+```
+
+
+# Overview
+
+The goal fo this assignment is to classify new "test" documents using already classified "training" documents. For this assignment we use a corpus of spam and ham (non-spam) e-mails to predict whether or not a new document is a spam email. 
+
+The data for this project will come from the following sample open source corpus https://spamassassin.apache.org/old/publiccorpus/ 
+
+
+
+## Functions
+
+To increase the readability of the code I have abstracted some common actions into a few helper functions that retrieve the email list and clean the underlying  
+
+```{r functions, results="hide"}
+
+# function to load Emails from the folder
+loadEmail <- function(folder) {
+    
+    library(tm)
+    library(tm.plugin.mail)
+    library(stringr)
+    
+    emailCorp <-VCorpus(DirSource(folder), list(reader=readMail))
+    
+    return (emailCorp)
+}
+
+# function to clean and tiddy emials prior to processsing
+tiddyEmail <- function(emailCorp, type) {
+    
+    library(stringr)
+
+    email_df <- tibble( from = character(),
+                        domain = character(),
+                        subject  = character(),
+                        label  = character(),
+                        text = character()
+    )
+    
+    
+    
+    for (i in 1:length(emailCorp)) {
+        
+        from_tmp <- emailCorp[[i]][["meta"]][["header"]][["From"]]
+        domain_tmp <- sub(".*\\<(.*)\\>.*", "\\1", from_tmp, perl=TRUE)
+        text_tmp <- toString(emailCorp[[i]][["content"]])
+    
+        
+         email_df <- add_row(email_df,
+             from = from_tmp,
+             domain = gsub("@(.+)$", "\\1", domain_tmp),
+             subject = emailCorp[[i]][["meta"]][["header"]][["Subject"]],
+             text = text_tmp,
+             label = type
+         )
+    
+    }
+
+    
+    email_df$text <- iconv(email_df$text, "latin1", "UTF-8",sub='')
+    email_df$subject <- iconv(email_df$subject, "latin1", "UTF-8",sub='')    
+    
+    email_df$text <- gsub("<[^>]+>|&nbsp|\u18ff", "", email_df$text )
+    email_df$text <- str_replace_all(email_df$text, "[^[:alnum:]]", " ") %>% str_replace_all(.,"[ ]+", " ")
+    
+    email_df$subject <- gsub("<[^>]+>|&nbsp|\u18ff", "", email_df$subject )
+    email_df$subject <- str_replace_all(email_df$subject, "[^[:alnum:]]", " ") %>% str_replace_all(.,"[ ]+", " ")
+    
+    return(email_df)
+
+}
+
+
+```
+
+
+
+
+# Data Collection 
+
+For simplicity the email tar files were downloaded on uncompressed on a local folder. One folder for spam emails and the other folder for ham emails.
+
+
+## Read and Tidy Files
+
+The spam and ham emails are read from a local folder and processed. Randomly select a subset of the spam and ham tibbles.
+
+```{r load, results="hide"}
+
+email_path_ham = "/Users/davidsimbandumwe/dev/cuny/data_607/DATA607/Project4/files/easy_ham/"
+email_path_ham2 = "/Users/davidsimbandumwe/dev/cuny/data_607/DATA607/Project4/files/hard_ham/"
+email_path_spam = "/Users/davidsimbandumwe/dev/cuny/data_607/DATA607/Project4/files/spam/"
+email_path_spam2 = "/Users/davidsimbandumwe/dev/cuny/data_607/DATA607/Project4/files/spam_2/"
+
+
+emailSpam_cp <- loadEmail(email_path_spam)
+emailSpam_df <- tiddyEmail(emailSpam_cp,"spam")
+
+
+emailHam_cp <- loadEmail(email_path_ham)
+emailHam_df <- tiddyEmail(emailHam_cp,"ham")
+
+
+emailSpamHam_df <- slice_sample(emailSpam_df,n=500) %>%
+    bind_rows(slice_sample(emailHam_df,n=500))
+
+
+```
+
+
+
+# Data Preparation
+Prepare the data for the classification model by:
+
+- create a factor variable for the label {Spam | Ham}
+- use strata to ensure that the distribution of span to ham is similar in the training and testing data set. 
+- divide the dataset into a training dataset and a testing dataset. 
+
+
+```{r}
+
+emailSpamHam_df$label <- factor(emailSpamHam_df$label)
+    
+emailSpamHam_split <- initial_split(emailSpamHam_df, strata = label, prop = .8)
+
+emailSpamHam_train <- training(emailSpamHam_split)
+emailSpamHam_test <- testing(emailSpamHam_split)
+
+
+# dim
+dim(emailSpamHam_train)
+dim(emailSpamHam_test)
+
+```
+
+
+## top trigrams
+
+The email clean-up has created some messy trigrams for the analysis. Further analysis and trial and error could clean up some of these trigrams.
+
+```{r}
+top_trigrams <- emailSpamHam_train %>%
+  slice(1:1000) %>%
+  unnest_tokens(trigrams, 
+                text, token = "ngrams",
+                collapse = NULL) %>%
+  count(trigrams, sort = TRUE) %>%
+  filter(str_detect(trigrams, "xx")) %>%
+  slice(1:30)
+
+plot_data <- emailSpamHam_train %>%
+  unnest_tokens(trigrams, 
+                text, token = "ngrams",
+                collapse = NULL) %>%
+  right_join(top_trigrams, by = "trigrams") %>%
+  count(trigrams, label, .drop = FALSE)
+
+plot_data %>%
+  ggplot(aes(n, trigrams, fill = label)) +
+  scale_y_discrete(label=abbreviate) +
+  geom_col(position = "fill")
+
+```
+
+
+
+
+<br><br>
+Pre-process the data to prepare it for modeling. The recipes package, part of tidymodels, creates a specification of preprocessing steps that we want to perform. 
+
+- initialize the pre-processsing transformation with the recipe() function. 
+- tokenize text
+- filter text to max tokens
+
+
+```{r}
+
+emailSpamHam_rec <-
+  recipe(label ~ text, data = emailSpamHam_train)
+
+emailSpamHam_rec <- emailSpamHam_rec %>%
+  step_tokenize(text) %>%
+  step_tokenfilter(text, max_tokens = 1e3) %>%
+  step_tfidf(text)
+
+```
+
+
+
+# Analysis
+
+## Build Model
+Build a binary classification model the predicts the label for an email document. Use the tidymodels workflow() to bundle together our modeling components. Set the mode to classification and the model to naive Bayes. 
+
+
+```{r}
+
+emailSpamHam_wf <- workflow() %>%
+  add_recipe(emailSpamHam_rec)
+
+
+nb_spec <- naive_Bayes() %>%
+  set_mode("classification") %>%
+  set_engine("naivebayes")
+
+nb_spec
+
+
+
+```
+
+
+
+Fit the classification model and add the nb model to our workflow
+
+```{r}
+
+nb_fit <- emailSpamHam_wf %>%
+  add_model(nb_spec) %>%
+  fit(data = emailSpamHam_train)
+
+
+set.seed(234)
+emailSpamHam_folds <- vfold_cv(emailSpamHam_train)
+
+emailSpamHam_folds
+
+
+
+nb_wf <- workflow() %>%
+  add_recipe(emailSpamHam_rec) %>%
+  add_model(nb_spec)
+
+nb_wf
+
+
+
+```
+
+
+
+## Test Accuracy (Resample)
+Use resampling to estimate the performance of the model. Build a resample dataset from the training set. For these resamples, the average accuracy is 86.2%.
+
+```{r}
+
+
+nb_rs <- fit_resamples(
+    nb_wf,
+    emailSpamHam_folds,
+    metrics = metric_set(accuracy, roc_auc, recall, precision),
+    control = control_resamples(save_pred = TRUE)
+)
+
+
+nb_rs_metrics <- collect_metrics(nb_rs)
+nb_rs_predictions <- collect_predictions(nb_rs)
+
+nb_rs_metrics
+ 
+
+```
+
+
+
+
+```{r}
+
+nb_rs_predictions %>%
+  group_by(id) %>%
+  roc_curve(truth = label, .pred_ham) %>%
+  autoplot() +
+  labs(
+    color = NULL,
+    title = "ROC curve for Spam Emails",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+
+
+conf_mat_resampled(nb_rs, tidy = FALSE) %>%
+  autoplot(type = "heatmap")
+
+
+```
+
+
+## Test Accuracty (null model)
+
+The model does much better than the baseling / null classification model that always predicts that largest class for classification
+
+```{r}
+
+null_classification <- null_model() %>%
+  set_engine("parsnip") %>%
+  set_mode("classification")
+
+null_rs <- workflow() %>%
+  add_recipe(emailSpamHam_rec) %>%
+  add_model(null_classification) %>%
+  fit_resamples(
+    emailSpamHam_folds
+  )
+
+
+null_rs %>%
+  collect_metrics()
+
+
+```
+
+
+
+## Fit Test Data
+
+```{r}
+
+final_fitted <- last_fit(
+    nb_wf, 
+    metrics = metric_set(accuracy, roc_auc, recall, precision),
+    emailSpamHam_split)
+
+(nb_rs_metrics_final <- collect_metrics(final_fitted))
+nb_rs_predictions_final <- collect_predictions(final_fitted)
+
+```
+
+
+```{r}
+
+nb_rs_predictions_final %>%
+  group_by(id) %>%
+  roc_curve(truth = label, .pred_ham) %>%
+  autoplot() +
+  labs(
+    color = NULL,
+    title = "ROC curve for Spam Emails",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+
+
+nb_rs_predictions_final %>%
+  conf_mat(truth = label, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+
+```
+
+
+
+
+# Conclusion
+
+The final model had an accuracy of 89.5% on the test emails and a roc auc of 0.931. It miscalssified 3 emails as spam and 18 emaisl as ham. Overall the model performed well there are more ways to tune the model to drive more accuracy specifically filtering the emails and using the subject field for additioanl information. 
+
+
