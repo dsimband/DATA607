@@ -1,0 +1,443 @@
+---
+title: "DATA 607 Final Project: Predicting Financial Well Being"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(utils)
+
+library(tidyverse)
+library(tidymodels)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(plyr)
+library(naivebayes)
+
+library(glue)
+
+library(GGally)
+
+```
+
+
+# Overview
+
+Use the Consumer Financial Protection Board (cfpb) national wellness  survey data to predict the financial wellness score of an individual. The survey includes demographic data, assessment of financial knowledge,  financial positions, and financial products owned. The main goal is to explore several modeling packages and approaches using the same dataset to derive a Financial well-being prediction model. 
+
+
+Motivation: I have been interested in measure and predictors of financial wellness for several years now.  Financial knowledge is critical for individuals however there are enormous discrepancies in who develops financial literacy and who does not. 
+
+Data Sources:
+
+- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/)
+
+- The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
+
+- Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm)
+
+
+
+
+
+The main goal of a predictive model is to generate the most accurate predictions possible.
+An inferential model is created to test a hypothesis or draw conclusions about a population.
+
+
+
+
+
+## Setup
+
+```{r setup, results="hide"}
+
+set.seed(1234)
+rm(list=ls())
+
+
+
+```
+
+
+## Functions
+
+
+
+
+# Data Collection
+
+
+
+## Download and Tidy dataset from CFPB and FED
+
+```{r}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+fed_df <- getFedFile()
+cfpb_df <- getCFPBFile()
+
+
+```
+
+
+
+
+```{r}
+
+
+
+# 
+# par(mfrow=c(2,2))
+# 
+# ggplot(cfpb_df, 
+#     aes(FWBscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 4) +
+#     geom_vline(aes(xintercept = mean(FWBscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# 
+# ggplot(cfpb_df, 
+#     aes(FSscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 4) +
+#     geom_vline(aes(xintercept = mean(FSscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# 
+# ggplot(cfpb_df, 
+#     aes(LMscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 1) +
+#     geom_vline(aes(xintercept = mean(LMscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# ggplot(cfpb_df, 
+#     aes(KHscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 0.5) +
+#     geom_vline(aes(xintercept = mean(KHscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+
+```
+
+
+
+
+
+
+```{r}
+
+# ggpairs(cfpb_df, 
+#         columns = c("agecat", "generation", "PPETHM" ,"FWBscore","LMscore","KHscore"),
+#         cardinality_threshold=NULL
+#         )
+
+
+```
+
+
+
+```{r}
+
+# ggpairs(fed_df, 
+#         columns = c("gender", "age", "state", "metro" ,"cfpb_score"),
+#         cardinality_threshold=NULL
+#         )
+# 
+# 
+# ggpairs(fed_df, 
+#         columns = c("marital_status", "age", "cfpb_score"),
+#         cardinality_threshold=NULL
+#         )
+
+```
+
+
+
+# Data Preparation
+
+
+## Linear Regression
+
+### split data
+```{r}
+
+# Create a split object
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
+                                   strata = cfpb_score)
+
+# Build training data set
+cfpb_training <- cfpb_split %>% 
+                        training()
+
+# Build testing data set
+cfpb_test <- cfpb_split %>% 
+                    testing()
+
+```
+
+### fit traingin data
+
+```{r}
+
+# Model Specification
+lm_model <- linear_reg() %>% 
+            set_engine('lm') %>% # adds lm implementation of linear regression
+            set_mode('regression')
+
+# View object properties
+lm_model
+
+
+
+# Fitting to Trained Data
+lm_fit <- lm_model %>% 
+          fit(cfpb_score ~ ., data = cfpb_training)
+
+# View lm_fit properties
+lm_fit
+
+
+# Explore Training Results
+names(lm_fit)
+
+
+
+summary(lm_fit$fit)
+
+
+```
+
+
+
+```{r}
+
+par(mfrow=c(2,2)) # plot all 4 plots in one
+
+plot(lm_fit$fit, 
+     pch = 16,    # optional parameters to make points blue
+     col = '#006EA1')
+
+
+```
+
+
+### training results
+
+```{r}
+
+# Data frame of estimated coefficients
+tidy(lm_fit)
+
+
+# Performance metrics on training data
+glance(lm_fit)  
+
+# variable importance
+vip(lm_fit)
+
+```
+
+
+
+## Evaluating Test Set Accuracy
+
+```{r}
+
+predict(lm_fit, new_data = cfpb_test)
+
+
+
+cfpb_results <- predict(lm_fit, new_data = cfpb_test) %>% 
+                            bind_cols(cfpb_test)
+
+# View results
+cfpb_results
+
+
+
+```
+
+
+
+```{r}
+
+# RMSE on test set
+rmse(cfpb_results, 
+     truth = cfpb_score,
+     estimate = .pred)
+
+# R2 on test set
+rsq(cfpb_results,
+    truth = cfpb_score,
+    estimate = .pred)
+
+
+```
+
+
+
+
+```{r}
+
+ggplot(data = cfpb_results,
+       mapping = aes(x = .pred, y = cfpb_score)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Linear Regression Results - CFPB Score Test Set',
+       x = 'Predicted CFPB Score',
+       y = 'Actual CFPB Score')
+
+
+```
+
+
+
+
+
+## Creating a Machine Learning Workflow
+
+
+```{r}
+
+# Create a split object
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
+                                   strata = cfpb_score)
+
+# Build training data set
+cfpb_training <- cfpb_split %>% 
+                        training()
+
+# Build testing data set
+acfpb_test <- cfpb_split %>% 
+                    testing()
+
+
+```
+
+
+
+
+
+## feature engineering
+
+```{r}
+
+cfpb_recipe <- recipe(cfpb_score ~ ., data = cfpb_training) %>% 
+                      step_YeoJohnson(all_numeric(), -all_outcomes()) %>% 
+                      step_normalize(all_numeric(), -all_outcomes())
+
+
+```
+
+
+
+
+## specify model
+
+```{r}
+
+lm_model <- linear_reg() %>% 
+            set_engine('lm') %>% 
+            set_mode('regression')
+
+
+```
+
+
+
+
+## advertising workflow
+
+```{r}
+
+cfpb_workflow <- workflow() %>% 
+                        add_model(lm_model) %>% 
+                        add_recipe(cfpb_recipe)
+
+```
+
+
+
+## execute the workflow
+
+```{r}
+
+cfpb_fit <- cfpb_workflow %>% 
+                   last_fit(split = cfpb_split)
+
+
+# Obtain performance metrics on test data
+cfpb_fit %>% collect_metrics()
+
+
+
+# Obtain test set predictions data frame
+cfpb_test_results <- cfpb_fit %>% 
+                collect_predictions()
+# View results
+cfpb_test_results
+
+
+```
+
+
+
+
+```{r}
+
+# RMSE on test set
+rmse(cfpb_test_results, 
+     truth = cfpb_score,
+     estimate = .pred)
+
+# R2 on test set
+rsq(cfpb_test_results,
+    truth = cfpb_score,
+    estimate = .pred)
+
+
+```
+
+
+
+
+```{r}
+
+ggplot(data = cfpb_test_results,
+       mapping = aes(x = .pred, y = cfpb_score)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Linear Regression Results - CFPB Score Test Set',
+       x = 'Predicted Sales',
+       y = 'Actual Sales')
+
+
+```
+
+
+
+
+
+
+
+
+
+# Analysis
+
+
+# Conclusion
+	
+	
+	
+	
+	
+	
+	

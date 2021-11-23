@@ -1,0 +1,269 @@
+---
+title: "DATA 607 Final Project: Predicting Financial Well Being"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(utils)
+
+library(tidyverse)
+library(tidymodels)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(plyr)
+library(naivebayes)
+
+library(glue)
+
+library(GGally)
+
+```
+
+
+# Overview
+
+Use the Consumer Financial Protection Board (cfpb) national wellness  survey data to predict the financial wellness score of an individual. The survey includes demographic data, assessment of financial knowledge,  financial positions, and financial products owned. The main goal is to explore several modeling packages and approaches using the same dataset to derive a Financial well-being prediction model. 
+
+
+Motivation: I have been interested in measure and predictors of financial wellness for several years now.  Financial knowledge is critical for individuals however there are enormous discrepancies in who develops financial literacy and who does not. 
+
+Data Sources:
+
+- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/)
+
+- The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
+
+- Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm)
+
+
+
+
+
+The main goal of a predictive model is to generate the most accurate predictions possible.
+An inferential model is created to test a hypothesis or draw conclusions about a population.
+
+
+
+
+
+## Setup
+
+```{r setup, results="hide"}
+
+set.seed(1234)
+rm(list=ls())
+
+
+
+```
+
+
+## Functions
+
+
+
+
+# Data Collection
+
+
+
+## Download and Tidy dataset from CFPB and FED
+
+```{r}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+fed_df <- getFedFile()
+cfpb_df <- getCFPBFile()
+
+
+cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                           labels = c("0-10","10-20","20-30","30-40","40-50","50-60","60-70","70-80","80-90","90-100"),
+                           right = FALSE,
+                           include.lowest=TRUE)    
+
+
+
+par(mfrow=c(2,2))
+
+cfpb_df %>%
+filter(cfpb_score < 100)%>%
+ggplot(
+    aes(cfpb_score, fill = race, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = .75) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = .2) +
+    scale_fill_brewer(palette="Spectral")
+
+
+
+cfpb_df %>%
+filter(fs_skills_score < 100)%>%
+ggplot(
+    aes(fs_skills_score, fill = race,    y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = .75) +
+    geom_vline(aes(xintercept = mean(fs_skills_score)), linetype = "dashed", size = .2) +
+    scale_fill_brewer(palette="Spectral")
+
+
+```
+
+
+
+
+
+## Machine Learning
+
+
+### split data
+
+```{r}
+
+
+cfpb_split <- initial_split(cfpb_df, prop = 3/4)
+cfpb_split
+
+cfpb_train <- training(cfpb_split)
+cfpb_test <- testing(cfpb_split)
+
+cfpb_cv <- vfold_cv(cfpb_train)
+
+
+```
+
+
+
+### define reeipts 
+
+```{r}
+
+
+# define the recipe
+# cfpb_recipe <- recipe(cfpb_score_10cat ~ fs_skills_score+fs_lm_score+fs_kh_score, data = cfpb_df) %>%
+#     step_unknown(cfpb_score_10cat) %>%
+#     step_normalize(all_numeric()) %>%
+#     step_dummy(all_nominal()) %>%
+#     step_impute_knn(all_predictors())
+
+cfpb_recipe <- recipe(cfpb_score_10cat ~ ., data = cfpb_df) %>%
+    step_unknown(cfpb_score_10cat) %>%
+    step_naomit(everything(), skip = TRUE) %>% 
+    step_novel(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_numeric()) %>%
+    step_dummy(all_nominal()) %>%
+    step_corr(all_predictors(), threshold = 0.7, method = "spearman") %>%
+    step_impute_knn(all_predictors())
+
+summary(cfpb_recipe)
+
+
+# preprocess training data
+cfpb_train_preprocessed <- cfpb_recipe %>%
+      prep(cfpb_train) %>%
+      juice()
+
+cfpb_train_preprocessed
+
+
+```
+
+
+
+
+
+```{r}
+
+# specify model
+
+rf_model <- 
+  rand_forest() %>%
+  set_args(mtry = tune()) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification") 
+
+
+
+# set the workflow
+rf_workflow <- workflow() %>%
+  add_recipe(cfpb_recipe) %>%
+  add_model(rf_model)
+
+
+```
+
+
+
+
+# tune workflow
+
+```{r}
+
+
+#rf_grid <- expand.grid(mtry = c(3, 4, 5))
+rf_grid <- expand.grid(mtry = c(3, 4, 5), KEEP.OUT.ATTRS = TRUE, stringsAsFactors = TRUE)
+
+
+
+rf_tune_results <- rf_workflow %>%
+  tune_grid(resamples = cfpb_cv, 
+            grid = rf_grid, 
+            metrics = metric_set(accuracy, roc_auc) 
+        )
+
+
+# print results
+rf_tune_results %>%
+  collect_metrics()
+
+
+# finalize workflow
+param_final <- rf_tune_results %>%
+  select_best(metric = "accuracy")
+param_final
+
+
+#
+rf_workflow <- rf_workflow %>%
+  finalize_workflow(param_final)
+
+
+```
+
+
+
+
+
+```{r}
+
+rf_tune_results[[4]][[1]]
+
+
+
+```
+
+
+
+
+
+
+
+# Analysis
+
+
+# Conclusion
+	
+	
+	
+	
+	
+	
+	

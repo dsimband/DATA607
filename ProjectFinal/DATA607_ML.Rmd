@@ -1,0 +1,354 @@
+---
+title: "DATA 607 Final Project: Predicting Financial Well Being"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(stringr)
+library(glue)
+library(visdat)
+library(gt)
+library(GGally)
+
+
+library(ggmap)
+library(vip)
+
+library(purrr)
+
+
+
+library(utils)
+
+
+library(tidymodels)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(plyr)
+
+
+
+
+
+
+
+??initial_split
+??collect_metrics
+
+```
+
+
+# Overview
+
+
+
+
+
+
+## Setup
+
+```{r setup, results="hide"}
+
+set.seed(1234)
+rm(list=ls())
+
+
+
+```
+
+
+## Functions
+
+
+
+
+# Data Collection
+
+
+
+## Download and Tidy dataset from CFPB and FED
+
+```{r}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+fed_df <- getFedFile()
+cfpb_df <- getCFPBFile()
+
+
+# cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+#                            labels = c("< 0","0-10","10-20","20-30","30-40","40-50","50-60","60-70","70-80","80-90","90-100"),
+#                            right = FALSE,
+#                            include.lowest=TRUE)  
+
+
+
+# cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 50, 60, 70, 80, 100),
+#                            labels = c("< 40","40-50","50-60","60-70","70-80","80-100"),
+#                            right = FALSE,
+#                            include.lowest=TRUE)  
+
+
+cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE)  
+
+
+
+#cfpb_df <- cfpb_df %>% select(cfpb_score_10cat,fs_lm_score,fs_kh_score,age_8cat,age_generation,econ_hh_income,hh_size,race)
+
+cfpb_df <- cfpb_df %>% select(-c(sample_pop,poverty_stat,cfpb_score,fs_lm_score,fs_kh_score,fs_skills_score))
+
+# par(mfrow=c(2,2))
+# 
+# cfpb_df %>%
+# filter(cfpb_score < 100)%>%
+# ggplot(
+#     aes(cfpb_score, fill = race, y = stat(density))) +
+#     geom_histogram(binwidth = 1, alpha = .75) +
+#     geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = .2) +
+#     scale_fill_brewer(palette="Spectral")
+# 
+# 
+# 
+# 
+# cfpb_df %>%
+# ggplot(
+#     aes(cfpb_score_10cat, fill = race,    y = stat(density))) +
+#     geom_histogram(binwidth = 1, alpha = .75) +
+#     geom_vline(aes(xintercept = mean(cfpb_score_10cat)), linetype = "dashed", size = .2) +
+#     scale_fill_brewer(palette="Spectral")
+# 
+# 
+
+
+
+
+
+    
+# ggplot(cfpb_df, aes(x=levels(cfpb_score_10cat))) +
+#   geom_bar() +
+#   coord_flip()
+
+
+cfpb_df %>% dplyr::count(cfpb_score_10cat)
+
+
+```
+
+
+
+
+```{r}
+
+
+# cfpb_df  %>% 
+#   ggscatmat(corMethod = "spearman", alpha=0.2)
+# 
+# 
+# cfpb_df  %>% 
+#  ggscatmat(corMethod = "spearman",
+#             alpha=0.2)
+
+```
+
+
+
+
+## Machine Learning
+
+
+### split data
+
+```{r}
+
+
+# Put 3/4 of the data into the training set 
+cfpb_split <- initial_split(cfpb_df, 
+                           prop = 3/4, 
+                           strata = cfpb_score_10cat)
+
+# Create dataframes for the two sets:
+cfpb_train_data <- training(cfpb_split) 
+cfpb_test_data <- testing(cfpb_split)
+
+
+
+```
+
+
+
+### define reeipts 
+
+```{r}
+
+cfpb_rec <-
+  recipe(cfpb_score_10cat ~ ., data = cfpb_train_data) %>%
+  step_naomit(everything(), skip = TRUE) %>% 
+  step_novel(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_zv(all_numeric(), -all_outcomes()) %>%
+  step_corr(all_predictors(), threshold = 0.7, method = "spearman") 
+
+
+
+
+summary(cfpb_rec)
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+cfpb_prepped_data <- 
+  cfpb_rec %>% # use the recipe object
+  prep() %>% # perform the recipe on training data
+  juice() # extract only the preprocessed dataframe 
+
+
+glimpse(cfpb_prepped_data)
+
+
+
+```
+
+
+
+
+# folds and spec
+
+```{r}
+
+cv_folds <-
+ vfold_cv(cfpb_train_data, 
+          v = 5, 
+          strata = cfpb_score_10cat) 
+
+
+rf_spec <- 
+  rand_forest() %>% 
+  set_engine("ranger", importance = "impurity") %>% 
+  set_mode("classification")
+
+
+```
+
+
+
+
+# tune workflow
+
+```{r}
+
+
+# workflow
+rf_wflow <-
+ workflow() %>%
+ add_recipe(cfpb_rec) %>% 
+ add_model(rf_spec) 
+
+
+# resample
+rf_res <-
+  rf_wflow %>% 
+  fit_resamples(
+    resamples = cv_folds, 
+    metrics = metric_set(
+      recall, precision, f_meas, 
+      accuracy, kap,
+      roc_auc, sens, spec),
+    control = control_resamples(save_pred = TRUE)
+    ) 
+
+rf_res %>%  collect_metrics(summarize = TRUE)
+
+
+rf_metrics <- 
+  rf_res %>% 
+  collect_metrics(summarise = TRUE) %>%
+  mutate(model = "Random Forest")
+
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+last_fit_rf <- last_fit(rf_wflow, 
+                        split = cfpb_split,
+                        metrics = metric_set(
+                          recall, precision, f_meas, 
+                          accuracy, kap,
+                          roc_auc, sens, spec)
+                        )
+
+
+last_fit_rf %>% 
+  collect_metrics()
+
+
+last_fit_rf %>% 
+  pluck(".workflow", 1) %>%   
+  extract_fit_parsnip() %>% 
+  vip(num_features = 10)
+
+
+last_fit_rf %>%
+  collect_predictions() %>% 
+  conf_mat(cfpb_score_10cat, .pred_class) %>% 
+  autoplot(type = "heatmap")
+
+
+last_fit_rf %>% 
+  collect_predictions() %>% 
+  roc_curve(cfpb_score_10cat, .pred_above) %>% 
+  autoplot()
+
+
+
+
+
+```
+
+
+
+
+
+
+
+# Analysis
+
+
+# Conclusion
+	
+	
+	
+	
+	
+	
+	
