@@ -1,0 +1,308 @@
+---
+title: "DATA 607 Final Project: Predicting Financial Well Being"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#library(utils)
+
+library(tidyverse)
+library(datasets)
+library(neuralnet)
+library(caret)
+# library(tidymodels)
+# library(textrecipes)
+# library(discrim)
+library(dplyr)
+library(plyr)
+
+library(readr)
+library(stringr)
+library(glue)
+library(purrr)
+
+library(visdat)
+#library(gt)
+library(GGally)
+#library(ggmap)
+library(vip)
+
+
+ 
+
+
+
+```
+
+
+# Overview
+
+
+
+
+
+
+## Setup
+
+```{r setup, results="hide"}
+
+set.seed(1234)
+rm(list=ls())
+
+```
+
+```{r}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+```
+
+
+
+## Functions
+
+```{r}
+
+
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+```
+
+
+
+
+# Data Collection
+
+
+
+## Download and Tidy dataset from CFPB
+
+```{r}
+
+cfpb_df <- getCFPBFile()
+
+cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE)  
+
+
+cfpb_df <- slice_sample(cfpb_df,n=500) 
+cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, econ_hh_income, hh_earners, house_value,age_8cat, race, gender)
+
+summary(cfpb_df$cfpb_score)
+
+
+
+concrete_norm <- cfpb_df
+#concrete_norm$cfpb_score <- normalize(concrete_norm$cfpb_score)
+
+dmy <- dummyVars(" ~ .", data = concrete_norm, fullRank = T)
+dat_transformed <- data.frame(predict(dmy, newdata = concrete_norm))
+glimpse(dat_transformed)
+summary(cfpb_norm$cfpb_score)
+
+
+# split data
+split <- initial_split(dat_transformed, prop = .8, strata = cfpb_score)
+
+train_data <- training(split) 
+test_data <- testing(split)
+
+
+```
+
+
+
+### Train Model
+
+```{r}
+
+# create model
+
+model <- neuralnet(cfpb_score ~ ., data = train_data, err.fct="sse")
+plot(model)
+
+
+```
+
+
+
+
+### Test Model
+
+```{r}
+
+len <- length(names(train_data))
+
+results <- compute(model, test_data[2:len])
+
+predicted_score <- results$net.result
+
+cor(predicted_score, test_data$strength)
+
+```
+
+
+
+# Adding 5 Hidden layers to improve model performance.
+
+```{r}
+
+model2 <- neuralnet(cfpb_score ~ ., data = train_data, hidden = 5)
+
+plot(model2)
+
+```
+
+
+
+```{r}
+
+len <- length(names(train_data))
+
+results2 <- compute(model2, test_data[2:len])
+
+predicted_score2 <- results2$net.result
+
+cor(predicted_score2, test_data$strength)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Download and Tidy dataset from FED
+
+```{r}
+
+fed_df <- getFedFile()
+
+fed_df$cfpb_score <- as.numeric(fed_df$cfpb_score)
+fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 20","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE)  
+
+
+fed_df <- fed_df %>% select(cfpb_score, gender,age_4cat,household_size, race,
+                            marital_status, house_ownership, edu_cat, econ_hh_income
+                            )
+
+fed_df <- slice_sample(fed_df,n=500) 
+
+
+fed_df %>% dplyr::count(cfpb_score_4cat)
+summary(fed_df$cfpb_score)
+
+
+concrete_norm <- fed_df
+concrete_norm$household_size <- normalize(as.numeric(concrete_norm$household_size))
+concrete_norm$cfpb_score <- normalize(as.numeric(concrete_norm$cfpb_score)) 
+
+
+dmy <- dummyVars(" ~ .", data = concrete_norm, fullRank = T)
+dat_transformed <- data.frame(predict(dmy, newdata = concrete_norm))
+glimpse(dat_transformed)
+summary(dat_transformed$cfpb_score)
+
+
+# split data
+split <- initial_split(dat_transformed, prop = .8, strata = cfpb_score)
+
+train_data <- training(split) 
+test_data <- testing(split)
+
+
+```
+
+### Train Model
+
+```{r}
+
+# create model
+
+model <- neuralnet(cfpb_score ~ ., data = train_data, err.fct="sse")
+plot(model)
+
+
+```
+
+
+
+### Test Model
+
+```{r}
+
+len <- length(names(train_data))
+
+results <- compute(model, test_data[2:len])
+
+predicted_score <- results$net.result
+
+cor(predicted_score, test_data$strength)
+
+```
+
+
+# Adding 5 Hidden layers to improve model performance.
+
+```{r}
+
+model2 <- neuralnet(cfpb_score ~ ., data = train_data, hidden = 5)
+
+plot(model2)
+
+```
+
+
+
+```{r}
+
+len <- length(names(train_data))
+
+results2 <- compute(model2, test_data[2:len])
+
+predicted_score2 <- results2$net.result
+
+cor(predicted_score2, test_data$strength)
+
+```
+
+
+
+
+# Analysis
+
+
+# Conclusion
+	
+	
+	
+	
+	
+	
+	

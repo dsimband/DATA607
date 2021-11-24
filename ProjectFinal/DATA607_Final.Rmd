@@ -46,6 +46,15 @@ Data Sources:
 
 
 
+
+
+The main goal of a predictive model is to generate the most accurate predictions possible.
+An inferential model is created to test a hypothesis or draw conclusions about a population.
+
+
+
+
+
 ## Setup
 
 ```{r setup, results="hide"}
@@ -61,268 +70,9 @@ rm(list=ls())
 ## Functions
 
 
-```{r functions-well_being, results="hide"}
-
-tidyWellBeing <- function(df) {
-    
-df <- df %>%
-    select(sample, fpl, 
-            FWBscore,FSscore,LMscore,KHscore,
-           LIVINGARRANGEMENT,EARNERS, SAVINGSRANGES,
-           HOUSING,VALUERANGES,MORTGAGE,
-           agecat,generation,PPEDUC,PPETHM,PPGENDER,PPINCIMP,
-           PPHHSIZE,PPMARIT,PPMSACAT,PPREG4,PPREG9
-          )
-
-
-df$sample = revalue(factor(df$sample), c(
-  `1` = "General population",
-  `2` = "Age 62+ oversample",
-  `3` = "Race/ethnicity and poverty oversample"
-))
-df$fpl = revalue(factor(df$fpl), c(
-  `1` = "<100% FPL",
-  `2` = "100%-199% FPL",
-  `3` = "200%+ FPL"
-))
-df$LIVINGARRANGEMENT = revalue(factor(df$LIVINGARRANGEMENT), c(
-  `-1` = "Refused",
-  `1` = "I am the only adult in the household",
-  `2` = "I live with my spouse/partner/significant other",
-  `3` = "I live in my parents' home",
-  `4` = "I live with other family, friends, or roommates",
-  `5` = "Some other arrangement"
-))
-df$EARNERS = revalue(factor(df$EARNERS), c(
-  `-1` = "Refused",
-  `1` = "One",
-  `2` = "Two",
-  `3` = "More than two"
-))
-df$SAVINGSRANGES = revalue(factor(df$SAVINGSRANGES), c(
-  `-1` = "Refused",
-  `1` = "0",
-  `2` = "$1-99",
-  `3` = "$100-999",
-  `4` = "$1,000-4,999",
-  `5` = "$5,000-19,999",
-  `6` = "$20,000-74,999",
-  `7` = "$75,000 or more",
-  `98` = "I don't know",
-  `99` = "Prefer not to say"
-))
-df$HOUSING = revalue(factor(df$HOUSING), c(
-  `-1` = "Refused",
-  `1` = "I own my home",
-  `2` = "I rent",
-  `3` = "I do not currently own or rent"
-))
-df$VALUERANGES = revalue(factor(df$VALUERANGES), c(
-  `-2` = "Question not asked because respondent not in item base",
-  `-1` = "Refused",
-  `1` = "Less than $150,000",
-  `2` = "$150,000-249,999",
-  `3` = "$250,000-399,999",
-  `4` = "$400,000 or more",
-  `98` = "I don't know",
-  `99` = "Prefer not to say"
-))
-df$MORTGAGE = revalue(factor(df$MORTGAGE), c(
-  `-2` = "Question not asked because respondent not in item base",
-  `-1` = "Refused",
-  `1` = "Less than $50,000",
-  `2` = "$50,000-199,999",
-  `3` = "$200,000 or more",
-  `98` = "I don't know",
-  `99` = "Prefer not to say"
-))
-df$SAVINGSRANGES = revalue(factor(df$SAVINGSRANGES), c(
-  `-1` = "Refused",
-  `1` = "0",
-  `2` = "$1-99",
-  `3` = "$100-999",
-  `4` = "$1,000-4,999",
-  `5` = "$5,000-19,999",
-  `6` = "$20,000-74,999",
-  `7` = "$75,000 or more",
-  `98` = "I don't know",
-  `99` = "Prefer not to say"
-))
-
-df$agecat = revalue(factor(df$agecat), c(
-  `1` = "18-24",
-  `2` = "25-34",
-  `3` = "35-44",
-  `4` = "45-54",
-  `5` = "55-61",
-  `6` = "62-69",
-  `7` = "70-74",
-  `8` = "75+"
-))
-df$generation = revalue(factor(df$generation), c(
-  `1` = "Pre-Boomer",
-  `2` = "Boomer",
-  `3` = "Gen X",
-  `4` = "Millennial"
-))
-df$PPEDUC = revalue(factor(df$PPEDUC), c(
-  `1` = "Less than high school",
-  `2` = "High school degree/GED",
-  `3` = "Some college/Associate",
-  `4` = "Bachelor's degree",
-  `5` = "Graduate/professional degree"
-))
-df$PPETHM = revalue(factor(df$PPETHM), c(
-  `1` = "White, Non-Hispanic",
-  `2` = "Black, Non-Hispanic",
-  `3` = "Other, Non-Hispanic",
-  `4` = "Hispanic"
-))
-df$PPGENDER = revalue(factor(df$PPGENDER), c(
-  `1` = "Male",
-  `2` = "Female"
-))
-df$PPHHSIZE = revalue(factor(df$PPHHSIZE), c(
-  `1` = "1",
-  `2` = "2",
-  `3` = "3",
-  `4` = "4",
-  `5` = "5+"
-))
-df$PPINCIMP = revalue(factor(df$PPINCIMP), c(
-  `1` = "Less than $20,000",
-  `2` = "$20,000 to $29,999",
-  `3` = "$30,000 to $39,999",
-  `4` = "$40,000 to $49,999",
-  `5` = "$50,000 to $59,999",
-  `6` = "$60,000 to $74,999",
-  `7` = "$75,000 to $99,999",
-  `8` = "$100,000 to $149,999",
-  `9` = "$150,000 or more"
-))
-df$PPMARIT = revalue(factor(df$PPMARIT), c(
-  `1` = "Married",
-  `2` = "Widowed",
-  `3` = "Divorced/Separated",
-  `4` = "Never married",
-  `5` = "Living with partner"
-))
-df$PPMSACAT = revalue(factor(df$PPMSACAT), c(
-  `0` = "Non-Metro",
-  `1` = "Metro"
-))
-df$PPREG4 = revalue(factor(df$PPREG4), c(
-  `1` = "Northeast",
-  `2` = "Midwest",
-  `3` = "South",
-  `4` = "West"
-))
-df$PPREG9 = revalue(factor(df$PPREG9), c(
-  `1` = "New England",
-  `2` = "Mid-Atlantic",
-  `3` = "East-North Central",
-  `4` = "West-North Central",
-  `5` = "South Atlantic",
-  `6` = "East-South Central",
-  `7` = "West-South Central",
-  `8` = "Mountain",
-  `9` = "Pacific"
-))
-
-return(df)
-    
-}
-
-```
-
-
-```{r function-fed, results="hide"}
-
-tidyFed <- function(df) {
-   
-    
-        df <- df %>% select(
-            ppgender, ppage, ppagecat, ppagect4,
-            ppstaten, ppreg9, ppreg4, ppmsacat,
-            ppmarit, pphhsize, pphhhead, ppt01, ppt1317, ppt612, ppt18ov, 
-            pprent, pphouse, ind1, ppcm0160, ppwork,             
-            union100, pph10001, ppcm1301, ppcm0062,
-            ppethm, pphispan, ppeducat, ppeduc, iclevel, race_5cat, ppracem, educ_4cat, 
-            CH2, CH3, ppfs1482, CFPB_score,
-            ppfs0596, inc_4cat_50k, ppincimp, atleast_okay, pay_casheqv, skip_medical 
-    ) 
-        
-    df <- df %>%
-        dplyr::rename(
-            gender = ppgender,
-            age = ppage, 
-            age_7cat = ppagecat, 
-            age_4cat = ppagect4,
-            state = ppstaten, 
-            region_9base = ppreg9, 
-            region_4base = ppreg4, 
-            metro = ppmsacat,
-            marital_status = ppmarit, 
-            household_size = pphhsize, 
-            household_head = pphhhead, 
-            hh_child_0.1 = ppt01, 
-            hh_child_13.17 = ppt1317, 
-            hh_child_6.12 = ppt612, 
-            hh_child_18p = ppt18ov, 
-            house_ownership = pprent, 
-            house_type = pphouse, 
-            emp_industry = ind1, 
-            emp_occupation = ppcm0160, 
-            emp_status = ppwork,             
-            emp_union = union100, 
-            health = pph10001, 
-            emp_type = ppcm1301, 
-            emp_num_jobs = ppcm0062,
-            race = ppethm, 
-            race_hisp = pphispan, 
-            edu_cat = ppeducat, 
-            edu = ppeduc, 
-            edu_level = iclevel, 
-            race_5cat = race_5cat, 
-            race_census = ppracem, 
-            edu_4cat = educ_4cat, 
-            edu_mother = CH2, 
-            edu_father = CH3, 
-            credit_guess = ppfs1482, 
-            cfpb_score = CFPB_score,
-            econ_saving = ppfs0596, 
-            econ_inc_4cat = inc_4cat_50k, 
-            econ_income = ppincimp, 
-            econ_fin_ok = atleast_okay, 
-            econ_pay_exp400 = pay_casheqv, 
-            econ_skip_med = skip_medical 
-        )        
-        
-    df <- purrr::modify(df, as.factor) 
-        
-    return(df)
-}
-
-
-```
-
-
-
 
 
 # Data Collection
-
-## static data variables
-```{r}
-
-file_dir <- glue(getwd(),"/ProjectFinal/files/")
-fed_file_zip <- glue(file_dir,"fed.zip")
-
-
-cfpb_url <- "https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv"
-fed_url <- "https://www.federalreserve.gov/consumerscommunities/files/SHED_public_use_data_2020_(CSV).zip"
-
-```
 
 
 
@@ -330,19 +80,64 @@ fed_url <- "https://www.federalreserve.gov/consumerscommunities/files/SHED_publi
 
 ```{r}
 
-download.file(fed_url, destfile=fed_file_zip)
-unzip(fed_file_zip, exdir = file_dir)
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
 
-zip_meta <- unzip(fed_file_zip, list = TRUE)
-fed_file_name <- glue(file_dir,zip_meta$Name)
-
-
-fed_df <- read.csv(fed_file_name)
-fed_df <- tidyFed(fed_df)
+fed_df <- getFedFile()
+cfpb_df <- getCFPBFile()
 
 
-wellbeing_df <- read.csv(cfpb_url)
-wellbeing_df <- tidyWellBeing(wellbeing_df)
+```
+
+
+
+
+```{r}
+
+
+
+# 
+# par(mfrow=c(2,2))
+# 
+# ggplot(cfpb_df, 
+#     aes(FWBscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 4) +
+#     geom_vline(aes(xintercept = mean(FWBscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# 
+# ggplot(cfpb_df, 
+#     aes(FSscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 4) +
+#     geom_vline(aes(xintercept = mean(FSscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# 
+# ggplot(cfpb_df, 
+#     aes(LMscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 1) +
+#     geom_vline(aes(xintercept = mean(LMscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+# 
+# ggplot(cfpb_df, 
+#     aes(KHscore, fill = generation, color = generation, y = stat(density))) +
+#     geom_histogram(binwidth = 0.5) +
+#     geom_vline(aes(xintercept = mean(KHscore)), linetype = "dashed", size = 0.6) +
+#     scale_fill_brewer(palette="Blues") 
+
+```
+
+
+
+
+
+
+```{r}
+
+# ggpairs(cfpb_df, 
+#         columns = c("agecat", "generation", "PPETHM" ,"FWBscore","LMscore","KHscore"),
+#         cardinality_threshold=NULL
+#         )
 
 
 ```
@@ -351,31 +146,396 @@ wellbeing_df <- tidyWellBeing(wellbeing_df)
 
 ```{r}
 
-ggpairs(wellbeing_df, columns = c("gender", "age_7cat", "state", "metro", "marital_status" ,"cfpb_score"))
-
-
-```
-
-
-
-```{r}
-
-ggpairs(fed_df, 
-        columns = c("gender", "age", "state", "metro", "marital_status" ,"cfpb_score"),
-        cardinality_threshold=NULL
-        )
-
-
-ggpairs(fed_df, 
-        columns = c("gender", "age", "cfpb_score"),
-        cardinality_threshold=NULL
-        )
+# ggpairs(fed_df, 
+#         columns = c("gender", "age", "state", "metro" ,"cfpb_score"),
+#         cardinality_threshold=NULL
+#         )
+# 
+# 
+# ggpairs(fed_df, 
+#         columns = c("marital_status", "age", "cfpb_score"),
+#         cardinality_threshold=NULL
+#         )
 
 ```
 
 
 
 # Data Preparation
+
+
+## Linear Regression
+
+### split data
+```{r}
+
+# Create a split object
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
+                                   strata = cfpb_score)
+
+# Build training data set
+cfpb_training <- cfpb_split %>% 
+                        training()
+
+# Build testing data set
+cfpb_test <- cfpb_split %>% 
+                    testing()
+
+```
+
+### fit traingin data
+
+```{r}
+
+# Model Specification
+lm_model <- linear_reg() %>% 
+            set_engine('lm') %>% # adds lm implementation of linear regression
+            set_mode('regression')
+
+# View object properties
+lm_model
+
+
+
+# Fitting to Trained Data
+lm_fit <- lm_model %>% 
+          fit(cfpb_score ~ ., data = cfpb_training)
+
+# View lm_fit properties
+lm_fit
+
+
+# Explore Training Results
+names(lm_fit)
+
+
+
+summary(lm_fit$fit)
+
+
+```
+
+
+
+```{r}
+
+par(mfrow=c(2,2)) # plot all 4 plots in one
+
+plot(lm_fit$fit, 
+     pch = 16,    # optional parameters to make points blue
+     col = '#006EA1')
+
+
+```
+
+
+### training results
+
+```{r}
+
+# Data frame of estimated coefficients
+tidy(lm_fit)
+
+
+# Performance metrics on training data
+glance(lm_fit)  
+
+# variable importance
+vip(lm_fit)
+
+```
+
+
+
+## Evaluating Test Set Accuracy
+
+```{r}
+
+predict(lm_fit, new_data = cfpb_test)
+
+
+
+cfpb_results <- predict(lm_fit, new_data = cfpb_test) %>% 
+                            bind_cols(cfpb_test)
+
+# View results
+cfpb_results
+
+
+
+```
+
+
+
+```{r}
+
+# RMSE on test set
+rmse(cfpb_results, 
+     truth = cfpb_score,
+     estimate = .pred)
+
+# R2 on test set
+rsq(cfpb_results,
+    truth = cfpb_score,
+    estimate = .pred)
+
+
+```
+
+
+
+
+```{r}
+
+ggplot(data = cfpb_results,
+       mapping = aes(x = .pred, y = cfpb_score)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Linear Regression Results - CFPB Score Test Set',
+       x = 'Predicted CFPB Score',
+       y = 'Actual CFPB Score')
+
+
+```
+
+
+
+
+
+## Creating a Machine Learning Workflow
+
+
+```{r}
+
+# Create a split object
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
+                                   strata = cfpb_score)
+
+# Build training data set
+cfpb_training <- cfpb_split %>% 
+                        training()
+
+# Build testing data set
+acfpb_test <- cfpb_split %>% 
+                    testing()
+
+
+```
+
+
+
+
+
+## feature engineering
+
+```{r}
+
+cfpb_recipe <- recipe(cfpb_score ~ ., data = cfpb_training) %>% 
+                      step_YeoJohnson(all_numeric(), -all_outcomes()) %>% 
+                      step_normalize(all_numeric(), -all_outcomes())
+
+
+```
+
+
+
+
+## specify model
+
+```{r}
+
+lm_model <- linear_reg() %>% 
+            set_engine('lm') %>% 
+            set_mode('regression')
+
+
+```
+
+
+
+
+## advertising workflow
+
+```{r}
+
+cfpb_workflow <- workflow() %>% 
+                        add_model(lm_model) %>% 
+                        add_recipe(cfpb_recipe)
+
+```
+
+
+
+## execute the workflow
+
+```{r}
+
+cfpb_fit <- cfpb_workflow %>% 
+                   last_fit(split = cfpb_split)
+
+
+# Obtain performance metrics on test data
+cfpb_fit %>% collect_metrics()
+
+
+
+# Obtain test set predictions data frame
+cfpb_test_results <- cfpb_fit %>% 
+                collect_predictions()
+# View results
+cfpb_test_results
+
+
+```
+
+
+
+
+```{r}
+
+# RMSE on test set
+rmse(cfpb_test_results, 
+     truth = cfpb_score,
+     estimate = .pred)
+
+# R2 on test set
+rsq(cfpb_test_results,
+    truth = cfpb_score,
+    estimate = .pred)
+
+
+```
+
+
+
+
+```{r}
+
+ggplot(data = cfpb_test_results,
+       mapping = aes(x = .pred, y = cfpb_score)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Linear Regression Results - CFPB Score Test Set',
+       x = 'Predicted Sales',
+       y = 'Actual Sales')
+
+
+```
+
+
+
+
+## Machine Learning
+
+
+### split data
+
+```{r}
+
+cfpb_df <- getCFPBFile()
+
+
+cfpb_split <- initial_split(cfpb_score_10cat, prop = 3/4)
+cfpb_split
+
+cfpb_train <- training(cfpb_split)
+cfpb_test <- testing(cfpb_split)
+
+cfpb_cv <- vfold_cv(cfpb_train)
+
+
+```
+
+
+
+### define reeipts 
+
+```{r}
+
+
+# define the recipe
+cfpb_recipe <- recipe(cfpb_score_10cat ~ ., data = cfpb_df) %>%
+    step_normalize(all_numeric()) %>%
+    step_impute_knn(all_predictors())
+
+cfpb_recipe
+
+
+# preprocess training data
+cfpb_train_preprocessed <- cfpb_recipe %>%
+      prep(cfpb_train) %>%
+      juice()
+
+cfpb_train_preprocessed
+
+
+```
+
+
+
+
+
+```{r}
+
+# specify model
+
+rf_model <- 
+  rand_forest() %>%
+  set_args(mtry = tune()) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("classification") 
+
+# set the workflow
+rf_workflow <- workflow() %>%
+  add_recipe(cfpb_recipe) %>%
+  add_model(rf_model)
+
+
+```
+
+
+
+
+# tune workflow
+
+```{r}
+
+
+rf_grid <- expand.grid(mtry = c(3, 4, 5))
+
+rf_tune_results <- rf_workflow %>%
+  tune_grid(resamples = cfpb_cv, 
+            grid = rf_grid, 
+            metrics = metric_set(accuracy, roc_auc) 
+        )
+
+
+# print results
+rf_tune_results %>%
+  collect_metrics()
+
+
+# finalize workflow
+param_final <- rf_tune_results %>%
+  select_best(metric = "accuracy")
+param_final
+
+
+#
+rf_workflow <- rf_workflow %>%
+  finalize_workflow(param_final)
+
+
+```
+
+
+
+
+
+
+
+
+
 
 
 
