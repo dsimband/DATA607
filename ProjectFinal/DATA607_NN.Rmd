@@ -6,7 +6,7 @@ output:
     theme: architect
     highlight: github
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +18,7 @@ library(tidyverse)
 library(datasets)
 library(neuralnet)
 library(caret)
-# library(tidymodels)
+library(tidymodels)
 # library(textrecipes)
 # library(discrim)
 library(dplyr)
@@ -92,26 +92,28 @@ normalize <- function(x) {
 
 cfpb_df <- getCFPBFile()
 
-cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
                            labels = c("< 40","40-60","60-80","80-100"),
                            right = FALSE,
                            include.lowest=TRUE)  
 
 
 cfpb_df <- slice_sample(cfpb_df,n=500) 
-cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, econ_hh_income, hh_earners, house_value,age_8cat, race, gender)
+#cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, econ_hh_income, hh_earners, house_value,age_8cat, race, gender)
+cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, house_value, house_mortgage, age_8cat, race)
+
 
 summary(cfpb_df$cfpb_score)
 
 
 
 concrete_norm <- cfpb_df
-#concrete_norm$cfpb_score <- normalize(concrete_norm$cfpb_score)
+concrete_norm$cfpb_score <- normalize(concrete_norm$cfpb_score)
 
 dmy <- dummyVars(" ~ .", data = concrete_norm, fullRank = T)
 dat_transformed <- data.frame(predict(dmy, newdata = concrete_norm))
 glimpse(dat_transformed)
-summary(cfpb_norm$cfpb_score)
+summary(concrete_norm$cfpb_score)
 
 
 # split data
@@ -131,10 +133,12 @@ test_data <- testing(split)
 
 # create model
 
-model <- neuralnet(cfpb_score ~ ., data = train_data, err.fct="sse")
+model <- neuralnet(cfpb_score ~ ., data = train_data, rep=1 , stepmax=1e5, err.fct="sse")
 plot(model)
 
 
+
+?neuralnet
 ```
 
 
@@ -152,6 +156,7 @@ predicted_score <- results$net.result
 
 cor(predicted_score, test_data$strength)
 
+
 ```
 
 
@@ -160,7 +165,7 @@ cor(predicted_score, test_data$strength)
 
 ```{r}
 
-model2 <- neuralnet(cfpb_score ~ ., data = train_data, hidden = 5)
+model2 <- neuralnet(cfpb_score ~ ., data = train_data, rep=1 , stepmax=1e5, hidden = 5)
 
 plot(model2)
 
@@ -208,19 +213,21 @@ fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100
                            include.lowest=TRUE)  
 
 
-fed_df <- fed_df %>% select(cfpb_score, gender,age_4cat,household_size, race,
-                            marital_status, house_ownership, edu_cat, econ_hh_income
-                            )
+# fed_df <- fed_df %>% select(cfpb_score, gender,age_4cat,household_size, race,
+#                             marital_status, house_ownership, edu_cat, econ_hh_income
+#                             )
+
+fed_df <- fed_df %>% select(cfpb_score, econ_fin_ok, econ_skip_med, econ_pay_exp400, age, econ_saving, health)
 
 fed_df <- slice_sample(fed_df,n=500) 
 
 
-fed_df %>% dplyr::count(cfpb_score_4cat)
+#fed_df %>% dplyr::count(cfpb_score_4cat)
 summary(fed_df$cfpb_score)
 
 
 concrete_norm <- fed_df
-concrete_norm$household_size <- normalize(as.numeric(concrete_norm$household_size))
+concrete_norm$age <- normalize(as.numeric(concrete_norm$age))
 concrete_norm$cfpb_score <- normalize(as.numeric(concrete_norm$cfpb_score)) 
 
 
@@ -245,7 +252,7 @@ test_data <- testing(split)
 
 # create model
 
-model <- neuralnet(cfpb_score ~ ., data = train_data, err.fct="sse")
+model <- neuralnet(cfpb_score ~ ., data = train_data, rep=1 , stepmax=1e5, err.fct="sse")
 plot(model)
 
 
@@ -272,7 +279,7 @@ cor(predicted_score, test_data$strength)
 
 ```{r}
 
-model2 <- neuralnet(cfpb_score ~ ., data = train_data, hidden = 5)
+model2 <- neuralnet(cfpb_score ~ ., data = train_data, rep=1 , stepmax=1e5, hidden = 5)
 
 plot(model2)
 

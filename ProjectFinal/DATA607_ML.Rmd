@@ -6,7 +6,7 @@ output:
     theme: architect
     highlight: github
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -45,12 +45,13 @@ library(vip)
 
 ## Setup
 
-```{r setup, results="hide"}
+```{r, results="hide"}
 set.seed(1234)
 rm(list=ls())
 ```
 
-```{r}
+
+```{r, include=FALSE, error=TRUE}
 
 fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
 source(fun_file_name)
@@ -74,14 +75,19 @@ source(fun_file_name)
 
 cfpb_df <- getCFPBFile()
 
-cfpb_df$cfpb_score_10cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
                            labels = c("< 40","40-60","60-80","80-100"),
                            right = FALSE,
                            include.lowest=TRUE)  
 
-cfpb_df <- cfpb_df %>% select(-c(sample_pop,poverty_stat,cfpb_score,fs_lm_score,fs_kh_score,fs_skills_score))
-cfpb_df %>% dplyr::count(cfpb_score_10cat)
-cfpb_df <- slice_sample(cfpb_df,n=500) 
+#cfpb_df <- cfpb_df %>% select(-c(sample_pop,poverty_stat,cfpb_score,fs_lm_score,fs_kh_score,fs_skills_score))
+#cfpb_df <- cfpb_df %>% select(cfpb_score_4cat, econ_hh_income, econ_save_rate, house_value, house_mortgage, age_8cat, race)
+#cfpb_df <- cfpb_df %>% select(cfpb_score_4cat,fs_lm_score,fs_kh_score,age_8cat,age_generation,econ_hh_income,hh_size,race)
+cfpb_df <- cfpb_df %>% select(cfpb_score_4cat, econ_hh_income, econ_save_rate, house_value, house_mortgage, age_8cat, race)
+
+
+#cfpb_df %>% dplyr::count(cfpb_score_4cat)
+cfpb_df <- slice_sample(cfpb_df,n=2000) 
 
 
 ```
@@ -97,9 +103,7 @@ cfpb_df <- slice_sample(cfpb_df,n=500)
 
 
 # Put 3/4 of the data into the training set 
-cfpb_split <- initial_split(cfpb_df, 
-                           prop = 3/4, 
-                           strata = cfpb_score_10cat)
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, strata = cfpb_score_4cat)
 
 # Create dataframes for the two sets:
 cfpb_train_data <- training(cfpb_split) 
@@ -115,7 +119,7 @@ cfpb_test_data <- testing(cfpb_split)
 ```{r}
 
 cfpb_rec <-
-  recipe(cfpb_score_10cat ~ ., data = cfpb_train_data) %>%
+  recipe(cfpb_score_4cat ~ ., data = cfpb_train_data) %>%
   step_naomit(everything(), skip = TRUE) %>% 
   step_novel(all_nominal(), -all_outcomes()) %>%
   step_normalize(all_numeric(), -all_outcomes()) %>% 
@@ -136,11 +140,13 @@ summary(cfpb_rec)
 
 
 cfpb_prepped_data <- 
-  cfpb_rec %>% # use the recipe object
-  prep() %>% # perform the recipe on training data
-  juice() # extract only the preprocessed dataframe 
+  cfpb_rec %>% 
+  prep() %>% 
+  juice() 
 
 glimpse(cfpb_prepped_data)
+
+
 
 ```
 
@@ -153,7 +159,7 @@ glimpse(cfpb_prepped_data)
 cv_folds <-
  vfold_cv(cfpb_train_data, 
           v = 5, 
-          strata = cfpb_score_10cat) 
+          strata = cfpb_score_4cat) 
 
 
 rf_spec <- 
@@ -217,19 +223,20 @@ last_fit_rf %>%
 last_fit_rf %>% 
   pluck(".workflow", 1) %>%   
   extract_fit_parsnip() %>% 
-  vip(num_features = 10)
+  vip(num_features = 25)
 
 
 last_fit_rf %>%
   collect_predictions() %>% 
-  conf_mat(cfpb_score_10cat, .pred_class) %>% 
+  conf_mat(cfpb_score_4cat, .pred_class) %>% 
   autoplot(type = "heatmap")
 
 
-last_fit_rf %>% 
-  collect_predictions() %>% 
-  roc_curve(cfpb_score_10cat, .pred_above) %>% 
-  autoplot()
+# last_fit_rf %>%
+#   collect_predictions() %>%
+#   roc_curve(cfpb_score_4cat, .pred_above) %>%
+#   autoplot()
+# 
 
 
 
@@ -242,7 +249,10 @@ last_fit_rf %>%
 ```{r}
 
 fed_df <- getFedFile()
-
+fed_df <- fed_df %>% drop_na()
+fed_df <- fed_df %>% filter(!(econ_saving == "" |  credit_guess =="" | health ==""))
+fed_df <- slice_sample(fed_df,n=4000) 
+fed_df$credit_guess <- str_replace_all(fed_df$credit_guess, "[^[:alnum:]]", "")
 
 fed_df$cfpb_score <- as.numeric(as.character(fed_df$cfpb_score)) 
 
@@ -253,12 +263,16 @@ fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100
 
 fed_df %>% dplyr::count(cfpb_score_4cat)
 
-fed_df <- fed_df %>% select(gender,age_4cat,household_size, race, cfpb_score_4cat,
-                            marital_status, house_ownership, edu_cat, econ_hh_income
-                            )
+# fed_df <- fed_df %>% select(gender,age_4cat,household_size, race, cfpb_score_4cat,
+#                             marital_status, house_ownership, edu_cat, econ_hh_income
+#                             )
 
 
-fed_df <- slice_sample(fed_df,n=500) 
+#fed_df <- fed_df %>% select(cfpb_score_4cat, econ_fin_ok, econ_skip_med, econ_pay_exp400, age_7cat, econ_saving, credit_guess )
+fed_df <- fed_df %>% select(cfpb_score_4cat, econ_fin_ok, econ_skip_med, econ_pay_exp400, age_7cat, econ_saving, credit_guess, health, econ_inc_4cat )
+
+
+
 
 ```
 
@@ -342,6 +356,7 @@ rf_fed_res <-
     metrics = metric_set(recall, precision, f_meas,accuracy, kap,roc_auc, sens, spec),
     control = control_resamples(save_pred = TRUE)
     ) 
+
 rf_fed_res %>%  collect_metrics(summarize = TRUE)
 
 
@@ -382,10 +397,10 @@ last_fit_fed_rf %>%
   autoplot(type = "heatmap")
 
 
-last_fit_fed_rf %>% 
-  collect_predictions() %>% 
-  roc_curve(cfpb_score_4cat, .pred_above) %>% 
-  autoplot()
+# last_fit_fed_rf %>% 
+#   collect_predictions() %>% 
+#   roc_curve(cfpb_score_4cat, .pred_above) %>% 
+#   autoplot()
 
 
 
