@@ -6,7 +6,7 @@ output:
     theme: architect
     highlight: github
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -26,30 +26,110 @@ library(glue)
 
 library(GGally)
 
+library(kableExtra)
+library(vip)
+
 ```
+
 
 
 # Overview
 
-Use the Consumer Financial Protection Board (cfpb) national wellness  survey data to predict the financial wellness score of an individual. The survey includes demographic data, assessment of financial knowledge,  financial positions, and financial products owned. The main goal is to explore several modeling packages and approaches using the same dataset to derive a Financial well-being prediction model. 
+Financial wellness can be defined in many different ways for purposes of this analysis Financial wellness is your relationship with money. It refers to how secure your money is, given all the variables involving an unknown future. [*Financial Education Council*](https://www.financialeducatorscouncil.org/financial-wellness-definition/). 
 
 
-Motivation: I have been interested in measure and predictors of financial wellness for several years now.  Financial knowledge is critical for individuals however there are enormous discrepancies in who develops financial literacy and who does not. 
+This is a broad definition but it includes several key concepts including:
 
-Data Sources:
-
-- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/)
-
-- The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
-
-- Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm)
+- preparation for emergencies
+- active short term and long term plans and goals
+- budgeting and attitudes towards money
+- how do your finances make you feel
 
 
+Intuitively we understand the importance of financial wellness to an individuals immediate financial stability, their long-term aggregation of wealth and financial sustainability in retirement. Making good financial decisions to optimize your current economic position, build wealth and ensure long-term economic stability. These benefits are well documented, studied and highlighted by financial advisers and wealth management firms. However the impact of financial wellness on your emotional and mental health should not be ignored our understated. The stress, anxiety, depression, sleep deprivation or even lack of motivation that comes with poorly handled money matters will impact all aspects of your life. 
+
+
+When people are in control of their money, they’re in control of their lives. They’re happier, less anxious and more empowered. [*nudge*](https://www.nudge-global.com) 
+
+
+Few topics will have such a large impact on you current and future life (stressor, determinant of economic). Not just from an economic perspective but also from a emotional health and mental health. The only solution is to introduce concepts such as financial knowledge, introducing concepts such as debt management, planning, and other financially relevant topics. This will however not be enough, taking a step further to help implement these concepts in their financial habits and put them on the right track towards wellness.
+
+I have been interested in measure and predictors of financial wellness for several years now.  Financial knowledge is critical for individuals however there are enormous discrepancies in who develops financial literacy and who does not. Key to understanding how to develop it is how to measure it and what factor impact financial wellness. The goal of this project is to explore the measurements of financial wellness and the factors that determine it. This is my third data science class and i would like to explore the data science modeling landscape. 
+
+The main goal is to explore several modeling packages and build a set of predictive models across the two data sets. The use of two data sets that share a common measure of financial well being should provide an opportunity to explore modeling process from a few different vantage points. 
 
 
 
-The main goal of a predictive model is to generate the most accurate predictions possible.
-An inferential model is created to test a hypothesis or draw conclusions about a population.
+
+
+
+## Data Sources:
+
+There are numerous studies of financial wellness sponsored by financial firms, industry groups and government agencies. I choose to focus on two studies:
+
+- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/) The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
+
+- Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm) The SHED survey results can be accessed as a zip file [*Survey of Household Economics and Decisionmaking 2020*](https://www.federalreserve.gov/consumerscommunities/files/SHED_public_use_data_2020_(CSV).zip)
+
+
+These are comprehensive studies that are conducted periodicaly using similar methodology. Both studies survey the population to gather demographic, financial and behavioral data from individuals. Both studies include the same measure of financial well being that was defined and operationalized by the Consumer Financial Protection Bureau called the Financial Well-Being Scale. The Financial Well-Being Scale was created as part of the Consumer Financial Protection Bureau to encourage Financial Wellness.
+
+The score is calcuated using 10 questions survey:
+
+<br>
+**How well does this statement describe you or your situation?**
+
+1. I could handle a major unexpected expense
+2. I am securing my financial future
+3. Because of my money situation, I feel like I will never have the things I want in life*
+4. I can enjoy life because of the way I’m managing my money
+5. I am just getting by financially
+6. I am concerned that the money I have or will save won’t last
+
+<br>
+**How often does this statement apply to you?**
+
+7. Giving a gift for a wedding, birthday or other occasion would put a strain on my finances for the month*
+8. I have money left over at the end of the month
+9. I am behind with my finances
+10. My finances control my life
+
+
+### Consumer Financial Protection Bureau - Financial Wellness Survey
+
+The data was collected as part of the Consumer Financial Protection Bureau’s (CFPB) National Financial Well-Being Survey Public Use File (PUF). The PUF is a dataset containing 
+
+1. demographic data
+2. assessment of financial knowledge
+3. financial positions 
+4. financial products owned
+5. financial well-being scale
+
+
+The National Financial Well-Being Survey was conducted in English and Spanish via web mode between October 27, 2016 and December 5, 2016. Overall, 6,394 surveys were completed: 5,395 from the general population sample and 999 from an oversample of adults aged 62 and older. The survey was designed to represent the adult population of the 50 U.S. states and the District of Columbia. The survey was fielded on the GfK KnowledgePanel®. The KnowledgePanel sample is recruited using address-based sampling and dual-frame landline and cell phone random digit dialing methods.
+
+The PUF was published in 2017.
+
+
+
+### Federal Reserve System - Survey of Household Economic and Decision making (SHED)
+
+The data was collected as part of the Report on the Economic Well‐Being of U.S. Households in 2020,and examines the economic well-being and financial lives of U.S. adults and their families.
+
+
+Federal Reserve Board. The SHED includes:
+
+1. demographic data
+2. assessment of financial knowledge
+3. financial products owned
+4. financial positions 
+5. economic fragility
+6. financial well-being scale
+
+
+The SHED is sponsored by the Board of Governors of the Federal Reserve System. The surveys that generate the data are collected by Ipsos using their online probability based KnowledgePanel.  The 2020 survey of more than 11,000 adults was conducted in November 2020, offering a picture of how people were faring eight months after the onset of the COVID-19 pandemic.
+
+The SHED was published in 2020.
 
 
 
@@ -57,14 +137,25 @@ An inferential model is created to test a hypothesis or draw conclusions about a
 
 ## Setup
 
-```{r setup, results="hide"}
+setup environment for analysis
+
+```{r clean, results="hide"}
 
 set.seed(1234)
 rm(list=ls())
 
+```
 
+
+Exported data load, tidy function and tibble cleaning
+
+```{r external_functions, results="hide",  error=TRUE}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name, local = knitr::knit_global())
 
 ```
+
 
 
 ## Functions
@@ -72,73 +163,170 @@ rm(list=ls())
 
 
 
-# Data Collection
+## Workflow
+
+This project is based on the OSEMN analysis Model.
+
+![OSEMN analysis Model](files/OSEMN.jpg){width=100%}
+
+- Obtain: Source a sufficient corpus of usable data to conduct the desired anlaysis. For the purposes of this analysis I will focus on the survey result files available from the 
+- Scrub: Preparing the data for further analysis by restructuring, cleaning, and filtering the data set.
+- Explore: Conduct an initial exploration of the data to better understand the cases and the variables
+- Model: Fit the model to the data once it has been cleaned, explored and properly formatted.
+- iNterpret: Explore the output of the model to understand the accuracy
 
 
 
-## Download and Tidy dataset from CFPB and FED
+# Obtain
+
+The data for the analysis was abtained from the following sources:
+
+- Consumer Financial Protection Bureau - Financial Wellness Survey: The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
+
+- Federal Reserve System - Survey of Household Economic and Decision making: The SHED survey results can be accesssed as a zip file [*Survey of Household Economics and Decisionmaking 2020*](https://www.federalreserve.gov/consumerscommunities/files/SHED_public_use_data_2020_(CSV).zip)
+
+```{r obtain}
+
+cfpbRaw_df <- getRawCFPBFile()
+fedRaw_df <- getRawFedFile()
+
+
+s_df <- tibble("name"=character(), "vars"=double(), "obs"=double(), "cfpb_mean"=double(), "cfpb_median"=double(), "cfpb_std"=double() )
+s_df <- s_df %>% add_row(name="cfpb", vars=ncol(cfpbRaw_df) ,obs=nrow(cfpbRaw_df), cfpb_mean=round(mean(cfpbRaw_df$FWBscore),2), 
+                 cfpb_median=round(median(cfpbRaw_df$FWBscore),2), cfpb_std=round(sd(cfpbRaw_df$FWBscore),2))
+s_df <- s_df %>% add_row(name="fed", vars=ncol(fedRaw_df) ,obs=nrow(fedRaw_df), cfpb_mean=round(mean(fedRaw_df$CFPB_score),2), 
+                 cfpb_median=round(median(fedRaw_df$CFPB_score),2), cfpb_std=round(sd(fedRaw_df$CFPB_score),2) )
+
+s_df %>%
+  kbl() %>%
+  column_spec(1, bold = T, border_right = T) %>%
+  kable_paper(bootstrap_options = "striped", fixed_thead = T,full_width = F)
+
+
+#cfpb
+names(cfpbRaw_df)
+
+#fed
+names(fedRaw_df)
+
+```
+
+
+
+```{r}
+# cfpb
+ggplot(cfpbRaw_df,
+    aes(FWBscore, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(FWBscore)), linetype = "dashed", color="red", size = 0.5) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (cfpb dataset)")
+
+summary(cfpbRaw_df$FWBscore)
+```
+
+```{r}
+# fed
+ggplot(fedRaw_df,
+    aes(CFPB_score, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(CFPB_score)), linetype = "dashed", color="red", size = 0.5) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (federal reserve data set)")
+
+summary(fedRaw_df$CFPB_score)
+```
+
+
+
+
+**observations**
+
+- Fin Well Scaled score has consistent stats across both surveys
+- Survey's are comprehensive so I will need to identify a managable set of variable and observations to support the analysis
+- Most of the variables are categorical
+- cfpb survey data is coded based on the survey responses. To be usable the data can be converted to factor variables that capture the survey code and the definition
+- survey response data requires the code book to disifer the variables in the file.
+
+
+# Scrub
+
+The scrub step in the process leverages the two code books for the survey to filter, translate and rename the variables.
+
+- filtering - To identifying a subset of the variable to use in the analysis I relied on existing theory, survey findings and variables that I was interested in exploring. Additional / different variables could be used in subsequent analysis to explore other theories. 
+- transforming - To transform the data set I relied on the code books for the survey to better understand the attribute and response coding in the data set. The Fed survey results included full text answer in a non UTF-8 format. The data was transformed in a UTF-8 format and truncated for readability.
+- filtering - To reduce the compute time and make the analysis manageable I took a random subset of the data ensuring that preserved the breakdown of cfpb score categories from the full data set.
+- outliers - there are a small number of records with a negative fin well scale score. Given the methodology for calculating the score these observations are anomalies and were deleted from the data set. 
+
 
 ```{r}
 
-fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
-source(fun_file_name)
-
-fed_df <- getFedFile()
+# get cfpb file
 cfpb_df <- getCFPBFile()
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+s_df <- tibble("cfpb" = levels(count(cfpb_df$cfpb_score_4cat)$x))
+s_df <- add_column(s_df,"cfpb_freq" = count(cfpb_df$cfpb_score_4cat)$freq)
+cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
+
+# reduce cfpb dataset
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=4000) 
+s_df <- add_column(s_df,"cfpb_filter" = levels(count(cfpb_df$cfpb_score_4cat)$x))
+s_df <- add_column(s_df,"cfpb_filter_freq" = count(cfpb_df$cfpb_score_4cat)$freq)
+
+
+# get fed file
+fed_df <- getFedFile()
+fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+s_df <- add_column(s_df,"fed" = levels(count(fed_df$cfpb_score_4cat)$x))
+s_df <- add_column(s_df,"fed_freq" = count(fed_df$cfpb_score_4cat)$freq)
+
+# reduce cfpb dataset
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
+s_df <- add_column(s_df,"fed_filter" = levels(count(fed_df$cfpb_score_4cat)$x))
+s_df <- add_column(s_df,"fed_filter_freq" = count(fed_df$cfpb_score_4cat)$freq)
+
+
+# a1 <- fedRaw_df
+# count(a1$ED0)
+# a1 <- purrr::modify_if(a1, is.character ,iconv ,"latin1", "UTF-8",sub='')
+# a1 <- purrr::modify_if(a1, is.character,str_trunc , 40)
+# 
+# fed_df$ED0 <- iconv(fed_df$ED0, "latin1", "UTF-8",sub='')
+# fed_df$ED0 <- str_trunc(fed_df$ED0,40)
+# 
+# 
+# ?purrr::modify_if()
+
+```
+
+```{r}
+
+s_df   %>% kbl() %>%
+  kable_paper(bootstrap_options = "striped", fixed_thead = T,full_width = F)
 
 
 ```
+
 
 
 
 
 ```{r}
 
-
-
-# 
-# par(mfrow=c(2,2))
-# 
-# ggplot(cfpb_df, 
-#     aes(FWBscore, fill = generation, color = generation, y = stat(density))) +
-#     geom_histogram(binwidth = 4) +
-#     geom_vline(aes(xintercept = mean(FWBscore)), linetype = "dashed", size = 0.6) +
-#     scale_fill_brewer(palette="Blues") 
-# 
-# 
-# ggplot(cfpb_df, 
-#     aes(FSscore, fill = generation, color = generation, y = stat(density))) +
-#     geom_histogram(binwidth = 4) +
-#     geom_vline(aes(xintercept = mean(FSscore)), linetype = "dashed", size = 0.6) +
-#     scale_fill_brewer(palette="Blues") 
-# 
-# 
-# ggplot(cfpb_df, 
-#     aes(LMscore, fill = generation, color = generation, y = stat(density))) +
-#     geom_histogram(binwidth = 1) +
-#     geom_vline(aes(xintercept = mean(LMscore)), linetype = "dashed", size = 0.6) +
-#     scale_fill_brewer(palette="Blues") 
-# 
-# ggplot(cfpb_df, 
-#     aes(KHscore, fill = generation, color = generation, y = stat(density))) +
-#     geom_histogram(binwidth = 0.5) +
-#     geom_vline(aes(xintercept = mean(KHscore)), linetype = "dashed", size = 0.6) +
-#     scale_fill_brewer(palette="Blues") 
-
-```
-
-
-
-
-
-
-```{r}
-
-# ggpairs(cfpb_df, 
-#         columns = c("agecat", "generation", "PPETHM" ,"FWBscore","LMscore","KHscore"),
-#         cardinality_threshold=NULL
-#         )
-
+# cfpb
+ggplot(cfpb_df,
+    aes(cfpb_score, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", color="red", size = 0.5) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (cfpb dataset)")
+summary(cfpb_df$cfpb_score)
 
 ```
 
@@ -146,142 +334,182 @@ cfpb_df <- getCFPBFile()
 
 ```{r}
 
-# ggpairs(fed_df, 
-#         columns = c("gender", "age", "state", "metro" ,"cfpb_score"),
-#         cardinality_threshold=NULL
-#         )
-# 
-# 
-# ggpairs(fed_df, 
-#         columns = c("marital_status", "age", "cfpb_score"),
-#         cardinality_threshold=NULL
-#         )
+
+# fed
+ggplot(fed_df,
+    aes(cfpb_score, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", color="red", size = 0.5) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (federal reserve data set)")
+
+summary(fed_df$cfpb_score)
+
 
 ```
 
 
 
-# Data Preparation
+<br><br>
+**observations**
+
+- outliers - the data includes outlier score below 20 and above 90. Since this distribution is likely a reflection of the population these records were retained in the data set.
 
 
-## Linear Regression
 
-### split data
+
+
+
+# Explore
+
+After reducing the survey data to smaller manageable set of observations and variables we can explore the details of the data set using the summary function. 
+
+
+## Consumer Financial Protection Bureau
+
+**Observations**
+
+- decline or refuse to answer are included in the survey results. It might be interesting to filter out all of these respondants. 
+- 
+
+**Identified the following categories of data**
+
+- sample stats - information about the population and how each observation aligns with the weights in the general population. These would be useful stat but beyond the scope of this activity
+- fin well, fin knowledge scores - The cfpb data set includes several scores related to fin well and 
+
+
+
+
 ```{r}
 
-# Create a split object
-cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
-                                   strata = cfpb_score)
-
-# Build training data set
-cfpb_training <- cfpb_split %>% 
-                        training()
-
-# Build testing data set
-cfpb_test <- cfpb_split %>% 
-                    testing()
+#cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat)
+summary(cfpb_df)
 
 ```
 
-### fit traingin data
+
+**Observations**
+
+- low correlation between the various measure of financial wellness and financial knowledge. The only two variable that display correlation above 0.5 are the cfpb score and the fs_lm_score
+
+```{r}
+
+# looks like the correlation breaks down by education level
+ggscatmat(data=cfpb_df, corMethod = "spearman", alpha=0.2)
+ggscatmat(data=cfpb_df, color="edu_level", corMethod = "spearman", alpha=0.2)
+ggscatmat(data=cfpb_df, color="econ_hh_income", corMethod = "spearman", alpha=0.2)
+
+
+```
+
+
+
+
+## Federal Reserve System
+
+```{r}
+
+#fed_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess)
+summary(fed_df)
+
+```
+
+
+
+- understand data and derived statistics
+ Project includes at least one statistical analysis and at least one graphics that describes or validates your data.
+
+- look for non complete records
+- identify the data types
+
+- looked at correlations between numeric vairables and the 
+- looked at cfpg_score compared to key categorical data.
+
+- key properties - focus on the various data sources
+- can i build a regression model for individual variables
+- graph with gm smooth - pick x number of variables to focus on 
+
+
+- can i calculate correlation between variables
+- distribution mean and standard deviation
+- visualization
+
+
+
+# Model
+
+
+
+
+
+## Consumer Financial Protection Bureau 
+
+
+
+
+```{r}
+
+# select independent variables
+cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat) # 0.3984 
+
+# split data
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, strata = cfpb_score)
+cfpb_training <-  training(cfpb_split)
+cfpb_test <-  testing(cfpb_split)
+
+```
+
+
 
 ```{r}
 
 # Model Specification
 lm_model <- linear_reg() %>% 
-            set_engine('lm') %>% # adds lm implementation of linear regression
+            set_engine('lm') %>% 
             set_mode('regression')
-
-# View object properties
-lm_model
-
 
 
 # Fitting to Trained Data
 lm_fit <- lm_model %>% 
           fit(cfpb_score ~ ., data = cfpb_training)
 
-# View lm_fit properties
-lm_fit
-
 
 # Explore Training Results
 names(lm_fit)
-
-
-
 summary(lm_fit$fit)
+par(mfrow=c(2,2)) 
+plot(lm_fit$fit, pch = 16, col = '#006EA1')
 
-
-```
-
-
-
-```{r}
-
-par(mfrow=c(2,2)) # plot all 4 plots in one
-
-plot(lm_fit$fit, 
-     pch = 16,    # optional parameters to make points blue
-     col = '#006EA1')
-
-
-```
-
-
-### training results
-
-```{r}
 
 # Data frame of estimated coefficients
 tidy(lm_fit)
-
 
 # Performance metrics on training data
 glance(lm_fit)  
 
 # variable importance
-vip(lm_fit)
+vip(lm_fit, num_features=25)
 
 ```
 
 
 
-## Evaluating Test Set Accuracy
 
 ```{r}
 
 predict(lm_fit, new_data = cfpb_test)
 
-
-
 cfpb_results <- predict(lm_fit, new_data = cfpb_test) %>% 
                             bind_cols(cfpb_test)
 
-# View results
-cfpb_results
-
-
-
-```
-
-
-
-```{r}
+#cfpb_results
 
 # RMSE on test set
-rmse(cfpb_results, 
-     truth = cfpb_score,
-     estimate = .pred)
-
-# R2 on test set
-rsq(cfpb_results,
-    truth = cfpb_score,
-    estimate = .pred)
+rmse(cfpb_results, truth = cfpb_score, estimate = .pred)
+rsq(cfpb_results, truth = cfpb_score, estimate = .pred)
 
 
 ```
-
 
 
 
@@ -290,35 +518,11 @@ rsq(cfpb_results,
 ggplot(data = cfpb_results,
        mapping = aes(x = .pred, y = cfpb_score)) +
   geom_point(color = '#006EA1') +
+  geom_smooth(method = lm) +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
-  labs(title = 'Linear Regression Results - CFPB Score Test Set',
-       x = 'Predicted CFPB Score',
-       y = 'Actual CFPB Score')
-
-
-```
-
-
-
-
-
-## Creating a Machine Learning Workflow
-
-
-```{r}
-
-# Create a split object
-cfpb_split <- initial_split(cfpb_df, prop = 0.8, 
-                                   strata = cfpb_score)
-
-# Build training data set
-cfpb_training <- cfpb_split %>% 
-                        training()
-
-# Build testing data set
-acfpb_test <- cfpb_split %>% 
-                    testing()
-
+  labs(title = 'Linear Regression Results - CFPB Score',
+       x = 'Predicted',
+       y = 'Actual')
 
 ```
 
@@ -326,64 +530,34 @@ acfpb_test <- cfpb_split %>%
 
 
 
-## feature engineering
+
+
+
+
+
+
+
+
+
+
+
+## Federal Reserve
+
+
+
+
+
 
 ```{r}
 
-cfpb_recipe <- recipe(cfpb_score ~ ., data = cfpb_training) %>% 
-                      step_YeoJohnson(all_numeric(), -all_outcomes()) %>% 
-                      step_normalize(all_numeric(), -all_outcomes())
+# select independent variables
+fed_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess) #0.4518
 
 
-```
-
-
-
-
-## specify model
-
-```{r}
-
-lm_model <- linear_reg() %>% 
-            set_engine('lm') %>% 
-            set_mode('regression')
-
-
-```
-
-
-
-
-## advertising workflow
-
-```{r}
-
-cfpb_workflow <- workflow() %>% 
-                        add_model(lm_model) %>% 
-                        add_recipe(cfpb_recipe)
-
-```
-
-
-
-## execute the workflow
-
-```{r}
-
-cfpb_fit <- cfpb_workflow %>% 
-                   last_fit(split = cfpb_split)
-
-
-# Obtain performance metrics on test data
-cfpb_fit %>% collect_metrics()
-
-
-
-# Obtain test set predictions data frame
-cfpb_test_results <- cfpb_fit %>% 
-                collect_predictions()
-# View results
-cfpb_test_results
+# split data
+fed_split <- initial_split(fed_df, prop = 0.8, strata = cfpb_score)
+fed_training <- training(fed_split)
+fed_test <- testing(fed_split)
 
 
 ```
@@ -392,139 +566,69 @@ cfpb_test_results
 
 
 ```{r}
+
+
+# Fitting to Trained Data
+lm_fit <- lm_model %>% 
+          fit(cfpb_score ~ ., data = fed_training)
+
+
+# Explore Training Results
+names(lm_fit)
+summary(lm_fit$fit)
+par(mfrow=c(2,2)) 
+plot(lm_fit$fit, pch = 16, col = '#006EA1')
+
+
+# Data frame of estimated coefficients
+tidy(lm_fit)
+
+# Performance metrics on training data
+glance(lm_fit)  
+
+# variable importance
+vip(lm_fit, num_features=25)
+
+```
+
+
+
+
+
+
+```{r}
+
+predict(lm_fit, new_data = fed_test)
+
+fed_results <- predict(lm_fit, new_data = fed_test) %>% 
+                            bind_cols(fed_test)
+
+#fed_results
+
 
 # RMSE on test set
-rmse(cfpb_test_results, 
-     truth = cfpb_score,
-     estimate = .pred)
+rmse(fed_results, truth = cfpb_score, estimate = .pred)
 
 # R2 on test set
-rsq(cfpb_test_results,
-    truth = cfpb_score,
-    estimate = .pred)
+rsq(fed_results, truth = cfpb_score, estimate = .pred)
+
+
 
 
 ```
 
 
 
-
 ```{r}
 
-ggplot(data = cfpb_test_results,
+ggplot(data = fed_results,
        mapping = aes(x = .pred, y = cfpb_score)) +
   geom_point(color = '#006EA1') +
+  geom_smooth(method = lm) +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
-  labs(title = 'Linear Regression Results - CFPB Score Test Set',
-       x = 'Predicted Sales',
-       y = 'Actual Sales')
-
-
-```
-
-
-
-
-## Machine Learning
-
-
-### split data
-
-```{r}
-
-cfpb_df <- getCFPBFile()
-
-
-cfpb_split <- initial_split(cfpb_score_10cat, prop = 3/4)
-cfpb_split
-
-cfpb_train <- training(cfpb_split)
-cfpb_test <- testing(cfpb_split)
-
-cfpb_cv <- vfold_cv(cfpb_train)
-
-
-```
-
-
-
-### define reeipts 
-
-```{r}
-
-
-# define the recipe
-cfpb_recipe <- recipe(cfpb_score_10cat ~ ., data = cfpb_df) %>%
-    step_normalize(all_numeric()) %>%
-    step_impute_knn(all_predictors())
-
-cfpb_recipe
-
-
-# preprocess training data
-cfpb_train_preprocessed <- cfpb_recipe %>%
-      prep(cfpb_train) %>%
-      juice()
-
-cfpb_train_preprocessed
-
-
-```
-
-
-
-
-
-```{r}
-
-# specify model
-
-rf_model <- 
-  rand_forest() %>%
-  set_args(mtry = tune()) %>%
-  set_engine("ranger", importance = "impurity") %>%
-  set_mode("classification") 
-
-# set the workflow
-rf_workflow <- workflow() %>%
-  add_recipe(cfpb_recipe) %>%
-  add_model(rf_model)
-
-
-```
-
-
-
-
-# tune workflow
-
-```{r}
-
-
-rf_grid <- expand.grid(mtry = c(3, 4, 5))
-
-rf_tune_results <- rf_workflow %>%
-  tune_grid(resamples = cfpb_cv, 
-            grid = rf_grid, 
-            metrics = metric_set(accuracy, roc_auc) 
-        )
-
-
-# print results
-rf_tune_results %>%
-  collect_metrics()
-
-
-# finalize workflow
-param_final <- rf_tune_results %>%
-  select_best(metric = "accuracy")
-param_final
-
-
-#
-rf_workflow <- rf_workflow %>%
-  finalize_workflow(param_final)
-
+  labs(title = 'Linear Regression - Fed CFPB Score',
+       x = 'Predicted',
+       y = 'Actual')
 
 ```
 
@@ -534,18 +638,52 @@ rf_workflow <- rf_workflow %>%
 
 
 
+- classifications
+- regression
+- machine learning
+
+- backwards selection and p-values
+- forward selection and p-values
+
+
+ Project includes at least one feature that we did not cover in class! There are many examples: “I used ggmap; I created
+a decision tree; I ranked the results; I created my presentation slides directly from R; I figured out to use OAuth 2.0...”
 
 
 
 
+# iNterpret
+- draw conclusions
+- evaluate meaning of results
 
-# Analysis
+
+backwards and forwards appraoches to optimizing models - balance predictive power with complexity. Reduce the number of variable included in the model. 
+
+
+
+# Challenges
+
+- understanding the data
+- filtering through the volume
+- transforming and tiddying the data for each model type
+- loading tensor flow packages
+- tuning the models
+- unravel the complexity of the surveys used - include weighted population data
 
 
 # Conclusion
 	
-	
-	
+ Project includes at least one graphic that supports your conclusion(s).
+ Project includes at least one statistical analysis that supports your conclusion(s).
+
+
+- The linear regression model was the most effective with this analysis
+- Impacted by my understanding of the data. more exposure to the data would enable greater configuration of the machine learnig models and neural network and could potentially improve the analysis
+
+
+The most effective model was the linear regression model. 
+
+Determined by the explanitor of the model.
 	
 	
 	

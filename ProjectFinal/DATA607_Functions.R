@@ -15,7 +15,7 @@ tidyFed <- function(df) {
         ppmarit, pphhsize, pphhhead, ppt01, ppt1317, ppt612, ppt18ov, 
         pprent, pphouse, ind1, ppcm0160, ppwork,             
         union100, pph10001, ppcm1301, ppcm0062,
-        ppethm, pphispan, ppeducat, ppeduc, iclevel, race_5cat, ppracem, educ_4cat, 
+        ppethm, pphispan, ppeducat, ED0, iclevel, race_5cat, ppracem, educ_4cat, 
         CH2, CH3, ppfs1482, CFPB_score,
         ppfs0596, inc_4cat_50k, ppincimp, atleast_okay, pay_casheqv, skip_medical 
     ) 
@@ -49,7 +49,7 @@ tidyFed <- function(df) {
             race = ppethm, 
             race_hisp = pphispan, 
             edu_cat = ppeducat, 
-            edu = ppeduc, 
+            edu = ED0, 
             edu_level = iclevel, 
             race_5cat = race_5cat, 
             race_census = ppracem, 
@@ -66,7 +66,46 @@ tidyFed <- function(df) {
             econ_skip_med = skip_medical 
         )        
     
-    df <- purrr::modify(df, as.factor) 
+    
+  
+    df <- df %>%
+        dplyr::mutate(
+            gender = as.factor(gender),
+            age_7cat = as.factor(age_7cat), 
+            age_4cat = as.factor(age_4cat),
+            state = as.factor(state), 
+            region_9base = as.factor(region_9base), 
+            region_4base = as.factor(region_4base), 
+            metro = as.factor(metro),
+            marital_status = as.factor(marital_status), 
+            household_head = as.factor(household_head), 
+            house_ownership = as.factor(house_ownership), 
+            house_type = as.factor(house_type), 
+            emp_industry = as.factor(emp_industry), 
+            emp_occupation = as.factor(emp_occupation), 
+            emp_status = as.factor(emp_status),             
+            emp_union = as.factor(emp_union), 
+            health = as.factor(health), 
+            emp_type = as.factor(emp_type), 
+            emp_num_jobs = as.factor(emp_num_jobs),
+            race = as.factor(race), 
+            race_hisp = as.factor(race_hisp), 
+            edu_cat = as.factor(edu_cat), 
+            edu = as.factor(edu), 
+            edu_level = as.factor(edu_level), 
+            race_5cat = as.factor(race_5cat), 
+            race_census = as.factor(race_census), 
+            edu_4cat = as.factor(edu_4cat), 
+            edu_mother = as.factor(edu_mother), 
+            edu_father = as.factor(edu_father), 
+            credit_guess = as.factor(credit_guess), 
+            econ_saving = as.factor(econ_saving), 
+            econ_inc_4cat = as.factor(econ_inc_4cat), 
+            econ_hh_income = as.factor(econ_hh_income), 
+            econ_fin_ok = as.factor(econ_fin_ok), 
+            econ_pay_exp400 = as.factor(econ_pay_exp400), 
+            econ_skip_med = as.factor(econ_skip_med) 
+        )        
     
     return(df)
 }
@@ -281,7 +320,7 @@ tidyCFPB <- function(df) {
 }
 
 
-getFedFile <- function() {
+getRawFedFile <- function() {
     
     file_dir <- glue(getwd(),"/ProjectFinal/files/")
     fed_file_zip <- glue(file_dir,"fed.zip")
@@ -293,8 +332,25 @@ getFedFile <- function() {
     zip_meta <- unzip(fed_file_zip, list = TRUE)
     fed_file_name <- glue(file_dir,zip_meta$Name)
     
+    fed_df <- read.csv(fed_file_name, encoding="UTF-8")
     
-    fed_df <- read.csv(fed_file_name)
+    #fed_df$ED0 <- iconv(fed_df$ED0, "latin1", "UTF-8",sub='')
+    #fed_df$ED0 <- str_trunc(fed_df$ED0,40)
+    
+    # fed_df <- purrr::modify(fed_df, iconv ,"latin1", "UTF-8",sub='')
+    # fed_df <- purrr::modify(fed_df, str_trunc , 40)    
+    
+    fed_df <- purrr::modify_if(fed_df, is.character ,iconv ,"latin1", "UTF-8",sub='')
+    fed_df <- purrr::modify_if(fed_df, is.character,str_trunc , 30)   
+    
+    return(fed_df)
+    
+}
+
+
+getFedFile <- function() {
+    
+    fed_df <- getRawFedFile()
     fed_df <- tidyFed(fed_df)
     
     return(fed_df)
@@ -302,11 +358,25 @@ getFedFile <- function() {
 }
 
 
-getCFPBFile <- function() {
+getRawCFPBFile <- function() {
     
     cfpb_url <- "https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv"
-    cfpb_df <- read.csv(cfpb_url)
+    cfpb_df <- read.csv(cfpb_url, encoding="UTF-8")
+    
+    return(cfpb_df)
+}
+
+
+getCFPBFile <- function() {
+    
+    cfpb_df <- getRawCFPBFile()
     cfpb_df <- tidyCFPB(cfpb_df)
     
     return(cfpb_df)
 }
+
+
+normalize <- function(x) {
+    return ((x - min(x)) / (max(x) - min(x)))
+}
+
