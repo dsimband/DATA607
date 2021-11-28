@@ -125,10 +125,10 @@ factorCFPB <- function(df) {
     ))
     df$LIVINGARRANGEMENT = revalue(factor(df$LIVINGARRANGEMENT), c(
         `-1` = "Refused",
-        `1` = "I am the only adult in the household",
-        `2` = "I live with my spouse/partner/significant other",
-        `3` = "I live in my parents' home",
-        `4` = "I live with other family, friends, or roommates",
+        `1` = "only adult in the household",
+        `2` = "my spouse/partner/significant other",
+        `3` = "in my parents' home",
+        `4` = "with other family, friends etc",
         `5` = "Some other arrangement"
     ))
     df$EARNERS = revalue(factor(df$EARNERS), c(
@@ -156,7 +156,7 @@ factorCFPB <- function(df) {
         `3` = "I do not currently own or rent"
     ))
     df$VALUERANGES = revalue(factor(df$VALUERANGES), c(
-        `-2` = "Question not asked because respondent not in item base",
+        `-2` = "Question not asked",
         `-1` = "Refused",
         `1` = "Less than $150,000",
         `2` = "$150,000-249,999",
@@ -166,7 +166,7 @@ factorCFPB <- function(df) {
         `99` = "Prefer not to say"
     ))
     df$MORTGAGE = revalue(factor(df$MORTGAGE), c(
-        `-2` = "Question not asked because respondent not in item base",
+        `-2` = "Question not asked",
         `-1` = "Refused",
         `1` = "Less than $50,000",
         `2` = "$50,000-199,999",
@@ -333,12 +333,6 @@ getRawFedFile <- function() {
     fed_file_name <- glue(file_dir,zip_meta$Name)
     
     fed_df <- read.csv(fed_file_name, encoding="UTF-8")
-    
-    #fed_df$ED0 <- iconv(fed_df$ED0, "latin1", "UTF-8",sub='')
-    #fed_df$ED0 <- str_trunc(fed_df$ED0,40)
-    
-    # fed_df <- purrr::modify(fed_df, iconv ,"latin1", "UTF-8",sub='')
-    # fed_df <- purrr::modify(fed_df, str_trunc , 40)    
     
     fed_df <- purrr::modify_if(fed_df, is.character ,iconv ,"latin1", "UTF-8",sub='')
     fed_df <- purrr::modify_if(fed_df, is.character,str_trunc , 30)   

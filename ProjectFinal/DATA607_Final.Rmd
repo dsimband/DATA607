@@ -23,9 +23,7 @@ library(plyr)
 library(naivebayes)
 
 library(glue)
-
 library(GGally)
-
 library(kableExtra)
 library(vip)
 
@@ -158,11 +156,6 @@ source(fun_file_name, local = knitr::knit_global())
 
 
 
-## Functions
-
-
-
-
 ## Workflow
 
 This project is based on the OSEMN analysis Model.
@@ -192,9 +185,11 @@ fedRaw_df <- getRawFedFile()
 
 
 s_df <- tibble("name"=character(), "vars"=double(), "obs"=double(), "cfpb_mean"=double(), "cfpb_median"=double(), "cfpb_std"=double() )
-s_df <- s_df %>% add_row(name="cfpb", vars=ncol(cfpbRaw_df) ,obs=nrow(cfpbRaw_df), cfpb_mean=round(mean(cfpbRaw_df$FWBscore),2), 
+s_df <- s_df %>% add_row(name="cfpb", vars=ncol(cfpbRaw_df) ,obs=nrow(cfpbRaw_df),
+                         cfpb_mean=round(mean(cfpbRaw_df$FWBscore),2), 
                  cfpb_median=round(median(cfpbRaw_df$FWBscore),2), cfpb_std=round(sd(cfpbRaw_df$FWBscore),2))
-s_df <- s_df %>% add_row(name="fed", vars=ncol(fedRaw_df) ,obs=nrow(fedRaw_df), cfpb_mean=round(mean(fedRaw_df$CFPB_score),2), 
+s_df <- s_df %>% add_row(name="fed", vars=ncol(fedRaw_df) ,obs=nrow(fedRaw_df),
+                         cfpb_mean=round(mean(fedRaw_df$CFPB_score),2), 
                  cfpb_median=round(median(fedRaw_df$CFPB_score),2), cfpb_std=round(sd(fedRaw_df$CFPB_score),2) )
 
 s_df %>%
@@ -202,12 +197,6 @@ s_df %>%
   column_spec(1, bold = T, border_right = T) %>%
   kable_paper(bootstrap_options = "striped", fixed_thead = T,full_width = F)
 
-
-#cfpb
-names(cfpbRaw_df)
-
-#fed
-names(fedRaw_df)
 
 ```
 
@@ -237,7 +226,7 @@ ggplot(fedRaw_df,
 summary(fedRaw_df$CFPB_score)
 ```
 
-
+The cfpb scores from the Federal Consumer Protection Bureau and the Federal Reserve System appear to follow a normal distribution with similar sample statistics mean median and standard deviation. 
 
 
 **observations**
@@ -292,24 +281,17 @@ s_df <- add_column(s_df,"fed_filter" = levels(count(fed_df$cfpb_score_4cat)$x))
 s_df <- add_column(s_df,"fed_filter_freq" = count(fed_df$cfpb_score_4cat)$freq)
 
 
-# a1 <- fedRaw_df
-# count(a1$ED0)
-# a1 <- purrr::modify_if(a1, is.character ,iconv ,"latin1", "UTF-8",sub='')
-# a1 <- purrr::modify_if(a1, is.character,str_trunc , 40)
-# 
-# fed_df$ED0 <- iconv(fed_df$ED0, "latin1", "UTF-8",sub='')
-# fed_df$ED0 <- str_trunc(fed_df$ED0,40)
-# 
-# 
-# ?purrr::modify_if()
-
 ```
+
+The survey results were sampled using a consistent weight for cfpb score. The resulting dataset includes 4000 surverys from each survey data set. 
 
 ```{r}
 
 s_df   %>% kbl() %>%
   kable_paper(bootstrap_options = "striped", fixed_thead = T,full_width = F)
 
+dim(cfpb_df)
+dim(fed_df)
 
 ```
 
@@ -353,48 +335,59 @@ summary(fed_df$cfpb_score)
 <br><br>
 **observations**
 
+- sampling - the sampling of the two survey data sets did not impact the distribution of the cfpb score in either data set. 
 - outliers - the data includes outlier score below 20 and above 90. Since this distribution is likely a reflection of the population these records were retained in the data set.
 
 
 
-
-
-
+<br>
 # Explore
 
-After reducing the survey data to smaller manageable set of observations and variables we can explore the details of the data set using the summary function. 
+The survey data is comprehensive with 217 variables in the CFPB Survey and 372 variables in the Federal Reserve survey. To reduce the solution space the survey data was pre-filtered to only include variables that i thought would be likely to contribute to the effectiveness of the model. A subset of the variable exploration is included in this document additional visualization and analysis can be found in the accompanied DATA607_Plot document and the DATA607_STEP document. Based on the analysis and some initial regression models using backwards and forwards step elimination of variables. 
+
+<br>
+**Consumer Financial Protection Bureau - Survey**
+
+- econ_save_rate (SAVINGSRANGES) - How much money do you have in savings today...?
+- house_mortgage (MORTGAGE) - What do you owe on your home today?
+- age_8cat (agecat) - Age
+- econ_hh_income (PPINCIMP) - Household Income
+
+<br>
+**Federal Reserve System - Survey**
+
+- age_7cat (ppagecat) - Age 7 Categories
+- econ_saving (ppfs0596) - Q22: What is the approximate total amount of your household's savings and invest
+- econ_inc_4cat (inc_4cat_50k) - Income (I40) ‐ 4 cat ‐ <25,25‐49,50‐99,100+
+- econ_fin_ok (atleast_okay) - Doing okay financially
+- econ_pay_exp400 (pay_casheqv) - Would handle $400 expense with cash or equivalent
+- econ_skip_med (skip_medical) - Went without medical care
 
 
 ## Consumer Financial Protection Bureau
 
-**Observations**
+From the initial exploration of the dependent variable, Financial Well-Being Scale (cfpb_score) follows the normal distribution with a cluster of results on the high and low end of scale. The median and the mean are fairly close so the distribution appears to be symmetric. The structure of the distribution suggest that there might be an opportunity to explore the top range of the distribution and the lower end of the distribution separately. This seems consistent with how the poor and the wealthy experience and navigate the economy.
 
-- decline or refuse to answer are included in the survey results. It might be interesting to filter out all of these respondants. 
-- 
-
-**Identified the following categories of data**
-
-- sample stats - information about the population and how each observation aligns with the weights in the general population. These would be useful stat but beyond the scope of this activity
-- fin well, fin knowledge scores - The cfpb data set includes several scores related to fin well and 
-
-
+Each of the survey questions includes the option not to provide answer. This creates incomplete data sets for a small proportion of the survey responses. The records for these incomplete cases where not filtered out until the specific model required complete records. 
 
 
 ```{r}
 
-#cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat)
-summary(cfpb_df)
+cfpb_tmp_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat)
+summary(cfpb_tmp_df)
 
 ```
 
 
 **Observations**
 
-- low correlation between the various measure of financial wellness and financial knowledge. The only two variable that display correlation above 0.5 are the cfpb score and the fs_lm_score
+- Low correlation across numeric values - There are limited numeric values in the survey data. The numeric data that exists is not heavily correlated. This is somewhat surprising given that at least 4 of the numeric values are defined to reflect financial knowledge or financial well being. The only two variable that display a correlation above 0.5 are the cfpb score for scaled financial wellness (FWBscore) and the Lusardi and Mitchell financial knowledge Summative scale scale scorescore (LMscore).
+
+- Correlation varies by education and income level - Even the overall correlation between numeric variables is low there is a difference in correlation across education levels and income groups. There is an avenue of futher analysis if we segmented the population using those variables. 
+
 
 ```{r}
 
-# looks like the correlation breaks down by education level
 ggscatmat(data=cfpb_df, corMethod = "spearman", alpha=0.2)
 ggscatmat(data=cfpb_df, color="edu_level", corMethod = "spearman", alpha=0.2)
 ggscatmat(data=cfpb_df, color="econ_hh_income", corMethod = "spearman", alpha=0.2)
@@ -404,53 +397,275 @@ ggscatmat(data=cfpb_df, color="econ_hh_income", corMethod = "spearman", alpha=0.
 
 
 
+**explore specific variables**
 
-## Federal Reserve System
+The top categories for house values, morgage and income start at \$150,000, \$200,000 and \$150,000. The lowest categorise for house value, motgage and income include \$150,000, \$50,000 and \$20,000. The lowest categories and highest categories for these variables lickley exibit different behavior and economic engagemet. 
+
 
 ```{r}
 
-#fed_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess)
-summary(fed_df)
+# econ_hh_income 
+ggplot(cfpb_df, aes(x=econ_hh_income)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_hh_income")
+
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_hh_income, color=econ_hh_income)) +
+  labs (title = "econ_hh_income")
+
+
+ggplot(cfpb_df,
+    aes(cfpb_score, fill = econ_hh_income, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_hh_income)")
 
 ```
 
 
 
-- understand data and derived statistics
- Project includes at least one statistical analysis and at least one graphics that describes or validates your data.
+The initial review of the comparative visualizations for race and cfpb score seem to indicate that race may not be a primary driver of financial well being. There is some correlation between race and wellness score but the streangth of that relationship is not direclty evident in the following graphs.  
 
-- look for non complete records
-- identify the data types
+```{r}
+# race
+ggplot(cfpb_df, aes(x=race)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "race")
 
-- looked at correlations between numeric vairables and the 
-- looked at cfpg_score compared to key categorical data.
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=race, color=race)) +
+  labs (title = "race")
 
-- key properties - focus on the various data sources
-- can i build a regression model for individual variables
-- graph with gm smooth - pick x number of variables to focus on 
+ggplot(cfpb_df,
+    aes(cfpb_score, fill = race, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by race)")
+```
 
 
-- can i calculate correlation between variables
-- distribution mean and standard deviation
-- visualization
+
+The distribution of responses for the house mortgage survey question seem to reflect an unwillingness by survey respondents to share these details with the pollster. Just over 1700 survey respondents declined to answer the question. 
+
+```{r}
+# house_mortgage
+ggplot(cfpb_df, aes(x=house_mortgage)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "house_mortgage")
+
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=house_mortgage, color=house_mortgage)) +
+  labs (title = "house_mortgage")
+
+ggplot(cfpb_df,
+    aes(cfpb_score, fill = house_mortgage, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by house_mortgage)")
+
+count(cfpb_df$house_mortgage)
+
+```
+
+
+
+
+
+
+## Federal Reserve System
+
+The data set from the Federal Reserve includes several questions that produce variable with overlapping measures. This includes the variables that meeasure education level, employment, house hold composition and ecomomic cercumstances. As part of the modeling selection process we will look to rationalize the list of variables so that we do not icnlude several variables that measure the same underlying characteristic. 
+
+The Federal Reserve survey data includes some sharp contrasts in cfpb score based on the survey respondents perceptions and their economic circumstances. These survey responses had higher contributiosn to the regression model. 
+
+Similar to the survey data from the CFPB a portion of the respondands declined to answere specific questions. We will filter out incomplete cases as required by the model being used. 
+
+
+**Observations**
+
+- Few numeric variables with limited correlations. - similar to the CFPB survey data the Federal Reserve survey data reflects low correlation between the numeric variables in the data set. It should also be noted that the FED data set include very few unique numeric variable. The overwhelming proportion of survey questions are designed around answer that can be placed in categories. The numeric numbers that exist primarily focus on house hold composition. 
+- survey data includes non complete records - the second phase of the analysis would be to identify smaller subset of the variable and review the impact of incomplete data sets and outliers.  
+
+
+
+```{r}
+
+#fed_tmp_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess)
+fed_tmp_df <- fed_df %>% select(cfpb_score, age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, econ_pay_exp400, econ_skip_med) #0.4675
+
+summary(fed_tmp_df)
+
+```
+
+
+
+The highest correlation in the numeric data is for children age 13 - 17 and over 18 years. These variables have a high correlations with cfpb score but they do not contributes substantially to the model .
+
+```{r}
+
+ggscatmat(data=fed_df, corMethod = "spearman", alpha=0.2)
+ggscatmat(data=fed_df, color="race", corMethod = "spearman", alpha=0.2)
+ggscatmat(data=fed_df, color="gender", corMethod = "spearman", alpha=0.2)
+ggscatmat(data=fed_df, color="age_7cat", corMethod = "spearman", alpha=0.2)
+
+```
+
+
+
+
+**explore specific variables**
+
+The Economic circumstance variables (econ_fin_ok, econ_pay_exp400, econ_skip_med) are heavily represented in the federal reserve model. This is not surprising given the nature of the questions that define the cfpb score. It does suggest that given the same demographic and economic characteristics survey respondents may report differing financial wellness results. 
+
+The box plots and the histogram of cfpb scores categorized by economic circumstance variables highlight the impact of these variables on the cfpb score of the survey respondents. It would indicate the survey respondents are aware of their current financial wellness circumstance. The alignment of the decision to forgo medical care based on on cfpb score highlights some real world impacts financial wellness. 
+
+It should be noted that ven though the box plots for cfpb score categorized by survey respondents perception of their economic circumstances there are several outlive records. As you can see from the grouped histogram there is distinct shift in the distribution upwards for survey respondents who feel they are on firmer footing financial. There are also outlier data that cluser near the top end and bottom end of the histogram.
+
+
+```{r}
+# econ_fin_ok
+ggplot(fed_df, aes(x=econ_fin_ok)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_fin_ok")
+
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_fin_ok, color=econ_fin_ok)) +
+  labs (title = "econ_fin_ok")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = econ_fin_ok, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_fin_ok)")
+
+```
+
+
+
+
+```{r}
+
+# econ_skip_med
+ggplot(fed_df, aes(x=econ_skip_med)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_skip_med")
+
+ggplot(fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_skip_med, color=econ_skip_med)) +
+  labs (title = "econ_skip_med")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = econ_skip_med, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_skip_med)")
+
+```
+
+
+
+
+```{r}
+
+# econ_pay_exp400
+ggplot(fed_df, aes(x=econ_pay_exp400)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_pay_exp400")
+
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_pay_exp400, color=econ_pay_exp400)) +
+  labs (title = "econ_pay_exp400")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = econ_pay_exp400, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_pay_exp400)")
+
+```
+
 
 
 
 # Model
 
+This analysis will focus on a linear regression model as the foundation of the conclusions. However one of the goals for this project was to explore different data science models. To those ends we will touch on a random forest model and neural network model that will utilize the same data set to generate a predictive model. 
+
+**The analysis includes the following models:**
+
+- linear regression model using parsnip packages from tidy models
+- random forest model using parsnip packages from tidy models
+- neural network model using the neural net package
 
 
+
+**Preconditions for Linear Models**
+
+The residual analysis from the linear modelling for the CFPB and Federal Reserve survey data roughly adheres to the following pre- conditions for linear modeling. More analysis would be required to ensure independence and a linear relationship to the dependent variable. It would be difficult to assert full independence of the predictor variables given that each case reflect an individual. Thre are numerouse studies that link demographics, race, geography and age to economic outcomes. 
+
+1. residuals are nearly normal
+2. residuals have constant variability
+3. residuals are independent
+4. each variable is linearly related to the outcome
+
+
+
+**Model Definition and Variable Selection**
+
+The analysis started with a review of the survey code book to identify candidate variables for the analysis. Relieying on the survey findings, and industry knowledge I conducted an initial selection of the variables. This was just used as a starting point, additional analysis could be conducted to refine the intial lists of variables that are included but the focus of this assignment was on exploring data manipulation, modeling. 
+
+
+24 variables from the CFPB Survey. 
+- house hold structure
+- housing economics and ownership characteristics
+- income
+- demographic
+- geographic
+- measures of financial knowledge and financial wellness
+
+
+43 variable from the Fed Survey file were selected.
+- house hold structure
+- housing economics and ownership characteristics
+- income
+- demographic
+- geographic
+- measures of financial knowledge and financial wellness
+- assessment of econmic situation
+
+
+As an extension of the variable exploration stepwise regression was used to optimize the model variables based on their contribution to the model accuracy. I started using manual stepwise variable elimination but opted for automated approach to simplify the analysis. The two approaches converged on models with similar accuracy and complexity but included different variables. For the analysis I used three automated model selection methods from the tidyverse packages,stepwise regression, Akaike information criterion(AIC) and Bayesian information criterion(BIC). The three methods of stepwise regression generated several candidates for the final model. I selected 2 models that although did not have the highest r-squared seemed to provide a good balance between accuracy and simplicity. 
 
 
 ## Consumer Financial Protection Bureau 
 
+The final model for the CFPB survey data included
+- econ_save_rate
+- house_mortgage
+- age_8cat
+- econ_hh_income
+
+The model selected was generated by Bayes information criteria (BIC) algorithm, it had an r-squard of 0.4167 based on the 4 variables above. The alternative model had an r-squared of 0.4248 based on 8 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
 
 
 
 ```{r}
 
 # select independent variables
-cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat) # 0.3984 
+cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+
 
 # split data
 cfpb_split <- initial_split(cfpb_df, prop = 0.8, strata = cfpb_score)
@@ -459,6 +674,11 @@ cfpb_test <-  testing(cfpb_split)
 
 ```
 
+
+
+Model stats
+- r-squared for the model is 0.403
+- The residual analysis analysis shows several outliers that are impacting the model 
 
 
 ```{r}
@@ -497,7 +717,7 @@ vip(lm_fit, num_features=25)
 
 ```{r}
 
-predict(lm_fit, new_data = cfpb_test)
+#predict(lm_fit, new_data = cfpb_test)
 
 cfpb_results <- predict(lm_fit, new_data = cfpb_test) %>% 
                             bind_cols(cfpb_test)
@@ -512,6 +732,7 @@ rsq(cfpb_results, truth = cfpb_score, estimate = .pred)
 ```
 
 
+The regression results indicate some predictive 
 
 ```{r}
 
@@ -543,16 +764,23 @@ ggplot(data = cfpb_results,
 
 ## Federal Reserve
 
-
-
-
+The final model for the CFPB survey data included
+- age_7cat
+- econ_saving
+- econ_inc_4cat
+- econ_fin_ok
+- econ_pay_exp400 
+- econ_skip_med
+    
+The model selected was a variation of the model generated by Bayes information criteria (BIC) algorithm. The BIC model included both age and age_7cat with an r-squared of 0.4675. I ran the model including only 1 of the variables (age r-squared = 0.4521,age_7cat r-squared = 0.4658) and selected age_7cat as representation of age. The second model had a higher r-squared but included 20 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
 
 
 ```{r}
 
 # select independent variables
-fed_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess) #0.4518
+#fed_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess) #0.4379 
 
+fed_df <- fed_df %>% select(cfpb_score, age, age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, econ_pay_exp400, econ_skip_med) #0.4675
 
 # split data
 fed_split <- initial_split(fed_df, prop = 0.8, strata = cfpb_score)
@@ -598,21 +826,17 @@ vip(lm_fit, num_features=25)
 
 ```{r}
 
-predict(lm_fit, new_data = fed_test)
+#predict(lm_fit, new_data = fed_test)
 
 fed_results <- predict(lm_fit, new_data = fed_test) %>% 
                             bind_cols(fed_test)
 
-#fed_results
+fed_results 
 
 
 # RMSE on test set
 rmse(fed_results, truth = cfpb_score, estimate = .pred)
-
-# R2 on test set
 rsq(fed_results, truth = cfpb_score, estimate = .pred)
-
-
 
 
 ```
@@ -634,57 +858,35 @@ ggplot(data = fed_results,
 
 
 
-
-
-
-
-- classifications
-- regression
-- machine learning
-
-- backwards selection and p-values
-- forward selection and p-values
-
-
- Project includes at least one feature that we did not cover in class! There are many examples: “I used ggmap; I created
-a decision tree; I ranked the results; I created my presentation slides directly from R; I figured out to use OAuth 2.0...”
-
-
-
-
 # iNterpret
-- draw conclusions
-- evaluate meaning of results
 
+The testing of the model indicates a clear relationship between the model variables and the observed cfpb score for the surveyed individuals. The residual graph indicates outliers at the low end and the higher end of the cfpb score. Studying those segments of the population might provide some additional insight into the relevance of the cfpb score to these segments. 
 
-backwards and forwards appraoches to optimizing models - balance predictive power with complexity. Reduce the number of variable included in the model. 
+The cfpb score is based on 10 questions that measure your financial wellbeing. The survey questions are self reported which includes some variability and bias. Self reporting also results in incomplete records as not every individual surveyed answers all of the questions. 
 
+Unsurprisingly variables representing savings rate, age and income appear in both models. This is consistent with some tenets of wealth management. The importance of both income and spending to your financial wellbeing. And more importantly the impact of time. As important as these variable are to financial wellness they are not able to explain more than 30% or 40% of your wellness score. 
+
+It is interesting that race, gender, education, house hold composition and education levels are not part of the model. These attributes  . The interrelation between race, gender and education with income is not included in this analysis but could help to explain their absence from the model. These variables could be impacting financial wellness through their impact on income.
 
 
 # Challenges
 
-- understanding the data
-- filtering through the volume
-- transforming and tiddying the data for each model type
-- loading tensor flow packages
-- tuning the models
-- unravel the complexity of the surveys used - include weighted population data
+There were several challenges associated with this assignment including:
+
+- understanding the data - the survey data is well structured however each code book is 100s of pages describing the individual variables. Understanding the data, selecting the variables and filtering the dataset required a significant amount of analysis and additional reading of associated material from the CFPB and Federal Reserve. 
+- transforming and tiddying the data for each model type - each model type used in the analysis requires descriptive data in a specific format, either numeric or categorical. The machine learning models required some additional analysis to define meaningful categories.
+- model selection - efficiently filtering through 100s of survey variable to identify 4 or 5 variables that will construct the mdoel.
+
 
 
 # Conclusion
 	
- Project includes at least one graphic that supports your conclusion(s).
- Project includes at least one statistical analysis that supports your conclusion(s).
+In reviewing the analysis what jumps out is the impact of early decisions on the overall outcome. The technical execution of the analysis is important but early decison on data to include or exclude in the analysis. This analysis utilized several models with each model generating slightly different results. 
+
+I had not expected to resolve any long standing debates in the financial industry but it has been surprising how many different avenues for analysis or questons arrose from this discussion. 
+
+The linear regression model was more effective than the two machine learning models. The machine learning models struggled to differentiate cases at the high end and the low end of the cfpb score spectrum. 
 
 
-- The linear regression model was the most effective with this analysis
-- Impacted by my understanding of the data. more exposure to the data would enable greater configuration of the machine learnig models and neural network and could potentially improve the analysis
-
-
-The most effective model was the linear regression model. 
-
-Determined by the explanitor of the model.
-	
-	
 	
 	
