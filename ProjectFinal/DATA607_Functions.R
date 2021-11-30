@@ -5,7 +5,7 @@ library(plyr)
 library(glue)
 
 
-
+# subset and rename Fed survey data
 tidyFed <- function(df) {
     
     
@@ -111,6 +111,7 @@ tidyFed <- function(df) {
 }
 
 
+# create factors for CFPB data
 factorCFPB <- function(df) {
     
     df$sample = revalue(factor(df$sample), c(
@@ -272,6 +273,7 @@ factorCFPB <- function(df) {
 }
 
 
+# subset and rename CFPB data
 tidyCFPB <- function(df) {
     
     df <- df %>%
@@ -320,6 +322,7 @@ tidyCFPB <- function(df) {
 }
 
 
+# laod and format Fed survey data 
 getRawFedFile <- function() {
     
     file_dir <- glue(getwd(),"/ProjectFinal/files/")
@@ -342,6 +345,8 @@ getRawFedFile <- function() {
 }
 
 
+
+# wrapper function to get Fed survey data
 getFedFile <- function() {
     
     fed_df <- getRawFedFile()
@@ -352,6 +357,7 @@ getFedFile <- function() {
 }
 
 
+# laod and format CFPB survey data 
 getRawCFPBFile <- function() {
     
     cfpb_url <- "https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv"
@@ -361,6 +367,8 @@ getRawCFPBFile <- function() {
 }
 
 
+
+# wrapper function to get CFPB survey data
 getCFPBFile <- function() {
     
     cfpb_df <- getRawCFPBFile()
@@ -368,6 +376,7 @@ getCFPBFile <- function() {
     
     return(cfpb_df)
 }
+
 
 
 normalize <- function(x) {

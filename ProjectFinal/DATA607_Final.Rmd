@@ -1,5 +1,5 @@
 ---
-title: "DATA 607 Final Project: Predicting Financial Well Being"
+title: "DATA 607 Final Project: Predicting Financial Wellbeing"
 author: "David Simbandumwe"
 output:
   prettydoc::html_pretty:
@@ -33,31 +33,24 @@ library(vip)
 
 # Overview
 
-Financial wellness can be defined in many different ways for purposes of this analysis Financial wellness is your relationship with money. It refers to how secure your money is, given all the variables involving an unknown future. [*Financial Education Council*](https://www.financialeducatorscouncil.org/financial-wellness-definition/). 
+Financial wellness can be defined in different ways for the purposes of this analysis Financial wellness will be defined as an individuals relationship with money. This definition refers to how secure your money is, given all the variables involving an unknown future. [*Financial Education Council*](https://www.financialeducatorscouncil.org/financial-wellness-definition/). 
 
 
-This is a broad definition but it includes several key concepts including:
-
-- preparation for emergencies
-- active short term and long term plans and goals
-- budgeting and attitudes towards money
-- how do your finances make you feel
-
-
-Intuitively we understand the importance of financial wellness to an individuals immediate financial stability, their long-term aggregation of wealth and financial sustainability in retirement. Making good financial decisions to optimize your current economic position, build wealth and ensure long-term economic stability. These benefits are well documented, studied and highlighted by financial advisers and wealth management firms. However the impact of financial wellness on your emotional and mental health should not be ignored our understated. The stress, anxiety, depression, sleep deprivation or even lack of motivation that comes with poorly handled money matters will impact all aspects of your life. 
+This is a broad definition but it includes several key concepts such as: 
+- Preparation for emergencies
+- Active short term and long term plans and goals
+- Budgeting and attitudes towards money
+- Feelings towards your finances
 
 
-When people are in control of their money, they’re in control of their lives. They’re happier, less anxious and more empowered. [*nudge*](https://www.nudge-global.com) 
+Intuitively we understand the importance of financial wellness to an individuals immediate financial stability, their long-term aggregation of wealth and financial sustainability in retirement. These benefits are well documented, studied and highlighted by financial advisers and wealth management firms. However the impact of financial wellness on your emotional and mental health should not be ignored our understated. The stress, anxiety, depression, sleep deprivation or even lack of motivation that comes with poorly handled money matters will impact all aspects of your life. 
 
 
-Few topics will have such a large impact on you current and future life (stressor, determinant of economic). Not just from an economic perspective but also from a emotional health and mental health. The only solution is to introduce concepts such as financial knowledge, introducing concepts such as debt management, planning, and other financially relevant topics. This will however not be enough, taking a step further to help implement these concepts in their financial habits and put them on the right track towards wellness.
+| *When people are in control of their money, they’re in control of their lives. They’re happier, less anxious and more empowered.* [*nudge*](https://www.nudge-global.com) 
 
-I have been interested in measure and predictors of financial wellness for several years now.  Financial knowledge is critical for individuals however there are enormous discrepancies in who develops financial literacy and who does not. Key to understanding how to develop it is how to measure it and what factor impact financial wellness. The goal of this project is to explore the measurements of financial wellness and the factors that determine it. This is my third data science class and i would like to explore the data science modeling landscape. 
+Few topics will have such a large impact on an individuals current and future life from both an economic and a mental health perspective. Key to developing financial wellness in the general population is understanding how to measure it and what factor impact it. The goal of this project is to explore the measurements of financial wellness and the factors that determine it. I have been interested in measures and predictors of financial wellness for several years. 
 
-The main goal is to explore several modeling packages and build a set of predictive models across the two data sets. The use of two data sets that share a common measure of financial well being should provide an opportunity to explore modeling process from a few different vantage points. 
-
-
-
+For this project I have identified two data sets that share a common measure of financial wellbeing. The Consumer Financial Protection Bureau has developed a measurements of financial wellbeing called the Financial Wellbeing Scale. The Federal Reserve System utilizes this same measurement for financial wellbeing in their annual household decision maker survey.
 
 
 
@@ -70,11 +63,11 @@ There are numerous studies of financial wellness sponsored by financial firms, i
 - Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm) The SHED survey results can be accessed as a zip file [*Survey of Household Economics and Decisionmaking 2020*](https://www.federalreserve.gov/consumerscommunities/files/SHED_public_use_data_2020_(CSV).zip)
 
 
-These are comprehensive studies that are conducted periodicaly using similar methodology. Both studies survey the population to gather demographic, financial and behavioral data from individuals. Both studies include the same measure of financial well being that was defined and operationalized by the Consumer Financial Protection Bureau called the Financial Well-Being Scale. The Financial Well-Being Scale was created as part of the Consumer Financial Protection Bureau to encourage Financial Wellness.
+These are comprehensive studies that are conducted periodically using similar methodology. Both studies survey the population to gather demographic, financial and behavioral data from individuals. Both studies include the same measure of financial wellbeing that was defined and operationalized by the Consumer Financial Protection Bureau called the Financial Well-Being Scale. The Financial Well-Being Scale was created as part of the Consumer Financial Protection Bureau to encourage Financial Wellness.
 
-The score is calcuated using 10 questions survey:
+<br><br>
+The score is calculated using 10 questions survey:
 
-<br>
 **How well does this statement describe you or your situation?**
 
 1. I could handle a major unexpected expense
@@ -95,7 +88,7 @@ The score is calcuated using 10 questions survey:
 
 ### Consumer Financial Protection Bureau - Financial Wellness Survey
 
-The data was collected as part of the Consumer Financial Protection Bureau’s (CFPB) National Financial Well-Being Survey Public Use File (PUF). The PUF is a dataset containing 
+The data was collected as part of the Consumer Financial Protection Bureau’s (CFPB) National Financial Well-Being Survey Public Use File (PUF). The PUF is a data set containing:
 
 1. demographic data
 2. assessment of financial knowledge
@@ -104,7 +97,7 @@ The data was collected as part of the Consumer Financial Protection Bureau’s (
 5. financial well-being scale
 
 
-The National Financial Well-Being Survey was conducted in English and Spanish via web mode between October 27, 2016 and December 5, 2016. Overall, 6,394 surveys were completed: 5,395 from the general population sample and 999 from an oversample of adults aged 62 and older. The survey was designed to represent the adult population of the 50 U.S. states and the District of Columbia. The survey was fielded on the GfK KnowledgePanel®. The KnowledgePanel sample is recruited using address-based sampling and dual-frame landline and cell phone random digit dialing methods.
+The National Financial Wellbeing Survey was conducted in English and Spanish digitally / online between October 27, 2016 and December 5, 2016. Overall, 6,394 surveys were completed: 5,395 from the general population sample and 999 from an oversample of adults aged 62 and older. The survey was designed to represent the adult population of the 50 U.S. states and the District of Columbia. The survey was fielded on the GfK KnowledgePanel®. The KnowledgePanel sample is recruited using address-based sampling and dual-frame landline and cell phone random digit dialing methods.
 
 The PUF was published in 2017.
 
@@ -115,7 +108,7 @@ The PUF was published in 2017.
 The data was collected as part of the Report on the Economic Well‐Being of U.S. Households in 2020,and examines the economic well-being and financial lives of U.S. adults and their families.
 
 
-Federal Reserve Board. The SHED includes:
+The SHED includes:
 
 1. demographic data
 2. assessment of financial knowledge
@@ -125,7 +118,7 @@ Federal Reserve Board. The SHED includes:
 6. financial well-being scale
 
 
-The SHED is sponsored by the Board of Governors of the Federal Reserve System. The surveys that generate the data are collected by Ipsos using their online probability based KnowledgePanel.  The 2020 survey of more than 11,000 adults was conducted in November 2020, offering a picture of how people were faring eight months after the onset of the COVID-19 pandemic.
+The SHED is sponsored by the Board of Governors of the Federal Reserve System. The surveys that generate the data is collected by Ipsos using their online probability based KnowledgePanel.  The 2020 survey of more than 11,000 adults was conducted in November 2020, offering a picture of how people were faring eight months after the onset of the COVID-19 pandemic.
 
 The SHED was published in 2020.
 
@@ -135,8 +128,6 @@ The SHED was published in 2020.
 
 ## Setup
 
-setup environment for analysis
-
 ```{r clean, results="hide"}
 
 set.seed(1234)
@@ -145,10 +136,9 @@ rm(list=ls())
 ```
 
 
-Exported data load, tidy function and tibble cleaning
 
 ```{r external_functions, results="hide",  error=TRUE}
-
+# Exported data load, tidy function and tibble cleaning
 fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
 source(fun_file_name, local = knitr::knit_global())
 
@@ -158,21 +148,23 @@ source(fun_file_name, local = knitr::knit_global())
 
 ## Workflow
 
-This project is based on the OSEMN analysis Model.
+This project is based on the OSEMN analysis Model. The OSEMN model is defined by the following steps:
+
+- Obtain - Source a sufficient corpus of usable data to conduct the desired analysis 
+- Scrub - Preparing the data for further analysis by restructuring, cleaning, and filtering the data set
+- Explore - Conduct an initial exploration of the data to better understand the cases and the variables
+- Model - Fit the model to the data once it has been cleaned, explored and properly formatted
+- iNterpret - Explore the output of the model to understand the accuracy
+
 
 ![OSEMN analysis Model](files/OSEMN.jpg){width=100%}
 
-- Obtain: Source a sufficient corpus of usable data to conduct the desired anlaysis. For the purposes of this analysis I will focus on the survey result files available from the 
-- Scrub: Preparing the data for further analysis by restructuring, cleaning, and filtering the data set.
-- Explore: Conduct an initial exploration of the data to better understand the cases and the variables
-- Model: Fit the model to the data once it has been cleaned, explored and properly formatted.
-- iNterpret: Explore the output of the model to understand the accuracy
 
 
 
 # Obtain
 
-The data for the analysis was abtained from the following sources:
+The data for the analysis was obtained from the following sources:
 
 - Consumer Financial Protection Bureau - Financial Wellness Survey: The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
 
@@ -180,17 +172,22 @@ The data for the analysis was abtained from the following sources:
 
 ```{r obtain}
 
+# load raw data
 cfpbRaw_df <- getRawCFPBFile()
 fedRaw_df <- getRawFedFile()
 
 
-s_df <- tibble("name"=character(), "vars"=double(), "obs"=double(), "cfpb_mean"=double(), "cfpb_median"=double(), "cfpb_std"=double() )
+# calculate sample stats for each survey
+s_df <- tibble("name"=character(), "vars"=double(), "obs"=double(), "cfpb_mean"=double(),
+               "cfpb_median"=double(), "cfpb_std"=double() )
 s_df <- s_df %>% add_row(name="cfpb", vars=ncol(cfpbRaw_df) ,obs=nrow(cfpbRaw_df),
-                         cfpb_mean=round(mean(cfpbRaw_df$FWBscore),2), 
-                 cfpb_median=round(median(cfpbRaw_df$FWBscore),2), cfpb_std=round(sd(cfpbRaw_df$FWBscore),2))
+                        cfpb_mean=round(mean(cfpbRaw_df$FWBscore),2), 
+                        cfpb_median=round(median(cfpbRaw_df$FWBscore),2), 
+                        cfpb_std=round(sd(cfpbRaw_df$FWBscore),2))
 s_df <- s_df %>% add_row(name="fed", vars=ncol(fedRaw_df) ,obs=nrow(fedRaw_df),
-                         cfpb_mean=round(mean(fedRaw_df$CFPB_score),2), 
-                 cfpb_median=round(median(fedRaw_df$CFPB_score),2), cfpb_std=round(sd(fedRaw_df$CFPB_score),2) )
+                        cfpb_mean=round(mean(fedRaw_df$CFPB_score),2), 
+                        cfpb_median=round(median(fedRaw_df$CFPB_score),2), 
+                        cfpb_std=round(sd(fedRaw_df$CFPB_score),2) )
 
 s_df %>%
   kbl() %>%
@@ -226,26 +223,26 @@ ggplot(fedRaw_df,
 summary(fedRaw_df$CFPB_score)
 ```
 
-The cfpb scores from the Federal Consumer Protection Bureau and the Federal Reserve System appear to follow a normal distribution with similar sample statistics mean median and standard deviation. 
+The cfpb scores from the Federal Consumer Protection Bureau and the Federal Reserve System appear to follow a normal distribution with similar sample statistics for mean median and standard deviation. 
 
 
 **observations**
 
-- Fin Well Scaled score has consistent stats across both surveys
-- Survey's are comprehensive so I will need to identify a managable set of variable and observations to support the analysis
+- The Financial Wellbeing Scaled score has consistent stats across both surveys
+- The Survey's are comprehensive and will require filtering and variable selection to create a manageable data set of cases and variables.
 - Most of the variables are categorical
-- cfpb survey data is coded based on the survey responses. To be usable the data can be converted to factor variables that capture the survey code and the definition
-- survey response data requires the code book to disifer the variables in the file.
+- The CFPB survey data is coded based on the survey responses. To be usable the data can be converted to factor variables that capture the survey code and the definition
+- The survey response data requires the associated code books to decipher the variables in the file.
 
 
 # Scrub
 
 The scrub step in the process leverages the two code books for the survey to filter, translate and rename the variables.
 
-- filtering - To identifying a subset of the variable to use in the analysis I relied on existing theory, survey findings and variables that I was interested in exploring. Additional / different variables could be used in subsequent analysis to explore other theories. 
-- transforming - To transform the data set I relied on the code books for the survey to better understand the attribute and response coding in the data set. The Fed survey results included full text answer in a non UTF-8 format. The data was transformed in a UTF-8 format and truncated for readability.
-- filtering - To reduce the compute time and make the analysis manageable I took a random subset of the data ensuring that preserved the breakdown of cfpb score categories from the full data set.
-- outliers - there are a small number of records with a negative fin well scale score. Given the methodology for calculating the score these observations are anomalies and were deleted from the data set. 
+- Variable Selection - To identifying a subset of the variable to use in the analysis I relied on existing theory, survey findings and variables that I was interested in exploring. Additional / different variables could be used in subsequent analysis to explore other theories. 
+- Transforming - To transform the survey data I relied on the code books for each surveys to better understand the attribute and response coding. The Fed survey results included full text answer in a non UTF-8 format. The data was transformed to a UTF-8 format and truncated for readability.
+- Filtering - To reduce the compute time and make the analysis manageable I took a random subset of the data ensuring that preserved the breakdown of cfpb score categories from the full data set.
+- Outliers - there are a small number of records with a negative fin well scale score. Given the methodology for calculating the score these observations are anomalies and were deleted from the data set. 
 
 
 ```{r}
@@ -283,7 +280,7 @@ s_df <- add_column(s_df,"fed_filter_freq" = count(fed_df$cfpb_score_4cat)$freq)
 
 ```
 
-The survey results were sampled using a consistent weight for cfpb score. The resulting dataset includes 4000 surverys from each survey data set. 
+The survey results were sampled using a consistent weight for cfpb score. The resulting dataset includes 4000 surveys from each survey data set. 
 
 ```{r}
 
@@ -335,28 +332,28 @@ summary(fed_df$cfpb_score)
 <br><br>
 **observations**
 
-- sampling - the sampling of the two survey data sets did not impact the distribution of the cfpb score in either data set. 
-- outliers - the data includes outlier score below 20 and above 90. Since this distribution is likely a reflection of the population these records were retained in the data set.
+- Sampling - the sampling of the two survey data sets did not impact the distribution of the cfpb score in either data set. 
+- Outliers - the data includes outlier score below 20 and above 90. Since this distribution is likely a reflection of the population these records were retained in the data set.
 
 
 
-<br>
+
 # Explore
 
-The survey data is comprehensive with 217 variables in the CFPB Survey and 372 variables in the Federal Reserve survey. To reduce the solution space the survey data was pre-filtered to only include variables that i thought would be likely to contribute to the effectiveness of the model. A subset of the variable exploration is included in this document additional visualization and analysis can be found in the accompanied DATA607_Plot document and the DATA607_STEP document. Based on the analysis and some initial regression models using backwards and forwards step elimination of variables. 
+The survey data is comprehensive with 217 variables in the CFPB Survey and 372 variables in the Federal Reserve survey. To reduce the solution space the survey data was pre-filtered to only include variables that I thought would be likely to contribute to the effectiveness of the model. A subset of the variable exploration is included in this document additional visualization and analysis can be found in the accompanied DATA607_Plot document and the DATA607_STEP document. 
 
 <br>
 **Consumer Financial Protection Bureau - Survey**
 
 - econ_save_rate (SAVINGSRANGES) - How much money do you have in savings today...?
 - house_mortgage (MORTGAGE) - What do you owe on your home today?
-- age_8cat (agecat) - Age
+- age_8cat (agecat) - Age in 8 categories
 - econ_hh_income (PPINCIMP) - Household Income
 
 <br>
 **Federal Reserve System - Survey**
 
-- age_7cat (ppagecat) - Age 7 Categories
+- age_7cat (ppagecat) - Age in 7 Categories
 - econ_saving (ppfs0596) - Q22: What is the approximate total amount of your household's savings and invest
 - econ_inc_4cat (inc_4cat_50k) - Income (I40) ‐ 4 cat ‐ <25,25‐49,50‐99,100+
 - econ_fin_ok (atleast_okay) - Doing okay financially
@@ -366,7 +363,7 @@ The survey data is comprehensive with 217 variables in the CFPB Survey and 372 v
 
 ## Consumer Financial Protection Bureau
 
-From the initial exploration of the dependent variable, Financial Well-Being Scale (cfpb_score) follows the normal distribution with a cluster of results on the high and low end of scale. The median and the mean are fairly close so the distribution appears to be symmetric. The structure of the distribution suggest that there might be an opportunity to explore the top range of the distribution and the lower end of the distribution separately. This seems consistent with how the poor and the wealthy experience and navigate the economy.
+From the initial exploration of the dependent variable, Financial Well-Being Scale (cfpb_score) follows the normal distribution with a cluster of results on the high and low end of scale. The median and the mean are similar and the the distribution appears to be symmetric. The structure of the distribution suggest that there might be an opportunity to explore the top range of the distribution and the lower end of the distribution separately. This seems consistent with how the poor and the wealthy experience and navigate the economy.
 
 Each of the survey questions includes the option not to provide answer. This creates incomplete data sets for a small proportion of the survey responses. The records for these incomplete cases where not filtered out until the specific model required complete records. 
 
@@ -381,9 +378,9 @@ summary(cfpb_tmp_df)
 
 **Observations**
 
-- Low correlation across numeric values - There are limited numeric values in the survey data. The numeric data that exists is not heavily correlated. This is somewhat surprising given that at least 4 of the numeric values are defined to reflect financial knowledge or financial well being. The only two variable that display a correlation above 0.5 are the cfpb score for scaled financial wellness (FWBscore) and the Lusardi and Mitchell financial knowledge Summative scale scale scorescore (LMscore).
+- Low correlation across numeric values - There are limited numeric values in the survey data. The numeric data that exists is not heavily correlated. This is somewhat surprising given that at least 4 of the numeric values are defined to reflect financial knowledge or financial wellbeing. The only two variable that display a correlation above 0.5 are the cfpb score for scaled financial wellness (FWBscore) and the Lusardi and Mitchell financial knowledge Summative scale scale scorescore (LMscore).
 
-- Correlation varies by education and income level - Even the overall correlation between numeric variables is low there is a difference in correlation across education levels and income groups. There is an avenue of futher analysis if we segmented the population using those variables. 
+- Correlation varies by education and income level - Even though the overall correlation between numeric variables is low there is a difference in correlation across education levels and income groups. Segmenting the population using these variables is an avenue for further analysis. 
 
 
 ```{r}
@@ -399,7 +396,7 @@ ggscatmat(data=cfpb_df, color="econ_hh_income", corMethod = "spearman", alpha=0.
 
 **explore specific variables**
 
-The top categories for house values, morgage and income start at \$150,000, \$200,000 and \$150,000. The lowest categorise for house value, motgage and income include \$150,000, \$50,000 and \$20,000. The lowest categories and highest categories for these variables lickley exibit different behavior and economic engagemet. 
+The top categories for house values, morgage and income start at \$150,000, \$200,000 and \$150,000. The lowest categories for house value, mortgage and income include \$150,000, \$50,000 and \$20,000. The lowest categories and highest categories for these variables likely exhibit different behavior and economic engagement. 
 
 
 ```{r}
@@ -426,7 +423,7 @@ ggplot(cfpb_df,
 
 
 
-The initial review of the comparative visualizations for race and cfpb score seem to indicate that race may not be a primary driver of financial well being. There is some correlation between race and wellness score but the streangth of that relationship is not direclty evident in the following graphs.  
+The initial review of the comparative visualizations for race and cfpb score seem to indicate that race may not be a primary driver of financial wellbeing. There is some correlation between race and wellness score but the strength of that relationship is not directly evident in the following graphs.  
 
 ```{r}
 # race
@@ -480,16 +477,12 @@ count(cfpb_df$house_mortgage)
 
 ## Federal Reserve System
 
-The data set from the Federal Reserve includes several questions that produce variable with overlapping measures. This includes the variables that meeasure education level, employment, house hold composition and ecomomic cercumstances. As part of the modeling selection process we will look to rationalize the list of variables so that we do not icnlude several variables that measure the same underlying characteristic. 
-
-The Federal Reserve survey data includes some sharp contrasts in cfpb score based on the survey respondents perceptions and their economic circumstances. These survey responses had higher contributiosn to the regression model. 
-
-Similar to the survey data from the CFPB a portion of the respondands declined to answere specific questions. We will filter out incomplete cases as required by the model being used. 
+The data set from the Federal Reserve survey includes several questions that produce variable with overlapping measures. This includes the variables that measure education level, employment, house hold composition and economic circumstances. As part of the modeling selection process we will look to rationalize the list of variables so that we do not include several variables that measure the same underlying characteristic. Similar to the survey data from the CFPB a portion of the respondent declined to answer specific questions. We will filter out incomplete cases as required by the model being used. 
 
 
 **Observations**
 
-- Few numeric variables with limited correlations. - similar to the CFPB survey data the Federal Reserve survey data reflects low correlation between the numeric variables in the data set. It should also be noted that the FED data set include very few unique numeric variable. The overwhelming proportion of survey questions are designed around answer that can be placed in categories. The numeric numbers that exist primarily focus on house hold composition. 
+- Few numeric variables with limited correlations. - similar to the CFPB survey data the Federal Reserve survey data reflects low correlation between the numeric variables in the data set. It should also be noted that the FED data set includes very few unique numeric variable. The overwhelming proportion of survey questions are designed around answer that can be placed in categories. The numeric numbers that exist primarily focus on house hold composition. 
 - survey data includes non complete records - the second phase of the analysis would be to identify smaller subset of the variable and review the impact of incomplete data sets and outliers.  
 
 
@@ -521,11 +514,8 @@ ggscatmat(data=fed_df, color="age_7cat", corMethod = "spearman", alpha=0.2)
 
 **explore specific variables**
 
-The Economic circumstance variables (econ_fin_ok, econ_pay_exp400, econ_skip_med) are heavily represented in the federal reserve model. This is not surprising given the nature of the questions that define the cfpb score. It does suggest that given the same demographic and economic characteristics survey respondents may report differing financial wellness results. 
-
-The box plots and the histogram of cfpb scores categorized by economic circumstance variables highlight the impact of these variables on the cfpb score of the survey respondents. It would indicate the survey respondents are aware of their current financial wellness circumstance. The alignment of the decision to forgo medical care based on on cfpb score highlights some real world impacts financial wellness. 
-
-It should be noted that ven though the box plots for cfpb score categorized by survey respondents perception of their economic circumstances there are several outlive records. As you can see from the grouped histogram there is distinct shift in the distribution upwards for survey respondents who feel they are on firmer footing financial. There are also outlier data that cluser near the top end and bottom end of the histogram.
+The Economic circumstance variables (econ_fin_ok, econ_pay_exp400, econ_skip_med) are heavily represented in the federal reserve model. This is not surprising given the nature of the questions that define the cfpb score. It indicate the survey respondents are aware of their current financial wellness circumstance.  As you can see from the grouped histogram there is distinct shift in the distribution upwards for survey respondents who feel they are on firmer footing financial. The alignment of the decision to forgo medical care based on on cfpb score highlights some real world impacts financial wellness. Finally it should be noted that there are cluster of outlier data at the high end and lower end of the distribution. 
+ 
 
 
 ```{r}
@@ -601,19 +591,19 @@ ggplot(fed_df,
 
 # Model
 
-This analysis will focus on a linear regression model as the foundation of the conclusions. However one of the goals for this project was to explore different data science models. To those ends we will touch on a random forest model and neural network model that will utilize the same data set to generate a predictive model. 
+This analysis will focus on a linear regression model as the foundation of the conclusions. However one of the goals for this project was to explore different data science models. To these ends we will touch on a random forest model and neural network model that will utilize the same data set to generate a predictive model. 
 
+<br>
 **The analysis includes the following models:**
 
 - linear regression model using parsnip packages from tidy models
 - random forest model using parsnip packages from tidy models
-- neural network model using the neural net package
+- neural network model using the neuralnet package
 
-
-
+<br>
 **Preconditions for Linear Models**
 
-The residual analysis from the linear modelling for the CFPB and Federal Reserve survey data roughly adheres to the following pre- conditions for linear modeling. More analysis would be required to ensure independence and a linear relationship to the dependent variable. It would be difficult to assert full independence of the predictor variables given that each case reflect an individual. Thre are numerouse studies that link demographics, race, geography and age to economic outcomes. 
+The residual analysis from the CFPB model and Federal Reserve model roughly adheres to the following pre-conditions for linear modeling. More analysis would be required to ensure independence and a linear relationship to the dependent variable. It would be difficult to assert full independence of the predictor variables given that each case reflect an individual. Thre are numerouse studies that link demographics, race, geography and age to economic outcomes. 
 
 1. residuals are nearly normal
 2. residuals have constant variability
@@ -624,7 +614,7 @@ The residual analysis from the linear modelling for the CFPB and Federal Reserve
 
 **Model Definition and Variable Selection**
 
-The analysis started with a review of the survey code book to identify candidate variables for the analysis. Relieying on the survey findings, and industry knowledge I conducted an initial selection of the variables. This was just used as a starting point, additional analysis could be conducted to refine the intial lists of variables that are included but the focus of this assignment was on exploring data manipulation, modeling. 
+The analysis started with a review of the survey code book to identify candidate variables for the analysis. Then relying on the findngs from each survey, and industry knowledge I conducted an initial variable selection. This selection process was used as a starting point, additional analysis could be conducted to refine the initial lists. 
 
 
 24 variables from the CFPB Survey. 
@@ -646,7 +636,9 @@ The analysis started with a review of the survey code book to identify candidate
 - assessment of econmic situation
 
 
-As an extension of the variable exploration stepwise regression was used to optimize the model variables based on their contribution to the model accuracy. I started using manual stepwise variable elimination but opted for automated approach to simplify the analysis. The two approaches converged on models with similar accuracy and complexity but included different variables. For the analysis I used three automated model selection methods from the tidyverse packages,stepwise regression, Akaike information criterion(AIC) and Bayesian information criterion(BIC). The three methods of stepwise regression generated several candidates for the final model. I selected 2 models that although did not have the highest r-squared seemed to provide a good balance between accuracy and simplicity. 
+As an extension of the variable exploration stepwise regression was used to optimize the model variables based on their contribution to the model accuracy. I started using manual stepwise variable elimination process but opted for automated approach to simplify the analysis. The two approaches converged on models with similar accuracy and complexity but included different variables. 
+
+I used three automated model selection methods from the tidyverse packages for stepwise regression, Akaike information criterion(AIC) and Bayesian information criterion(BIC). The three methods of stepwise regression generated several candidates for the final model. I selected 2 models that although did not have the highest r-squared seemed to provide a good balance between accuracy and simplicity. 
 
 
 ## Consumer Financial Protection Bureau 
@@ -677,8 +669,8 @@ cfpb_test <-  testing(cfpb_split)
 
 
 Model stats
-- r-squared for the model is 0.403
-- The residual analysis analysis shows several outliers that are impacting the model 
+- r-squared for the model is 0.4118
+- The residual analysis analysis shows several outliers that are impacting the model
 
 
 ```{r}
@@ -732,8 +724,6 @@ rsq(cfpb_results, truth = cfpb_score, estimate = .pred)
 ```
 
 
-The regression results indicate some predictive 
-
 ```{r}
 
 ggplot(data = cfpb_results,
@@ -749,15 +739,26 @@ ggplot(data = cfpb_results,
 
 
 
+### Machine Learning Model (Random Forest)
+
+Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the varaiables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.5055. The confusion matrix below depicts that model performance. The model had difficulties predicting cfpb scores values below 40 and above 80.
+
+![Confusion Matrix](files/cfpb_ml_cm.png){width=400}
+This was an interesting exploration however the linear regression model seems more usable for this particular problem set. 
 
 
+### Neural Network
+
+Further analysis was conducted by creating a neural network using the neuralnet package. The resulting neural network with associated weights is depicted below. 
+
+![Neural Network](files/cfpb_nn2.png){width=450}
 
 
+<br>
+<br>
+The graph below depicts the mapping of actual cfpb scores to the predicted cfpb scores generated by the neural network. 
 
-
-
-
-
+![Neural Network](files/cfpb_nn_pred.png){width=400}
 
 
 
@@ -772,7 +773,7 @@ The final model for the CFPB survey data included
 - econ_pay_exp400 
 - econ_skip_med
     
-The model selected was a variation of the model generated by Bayes information criteria (BIC) algorithm. The BIC model included both age and age_7cat with an r-squared of 0.4675. I ran the model including only 1 of the variables (age r-squared = 0.4521,age_7cat r-squared = 0.4658) and selected age_7cat as representation of age. The second model had a higher r-squared but included 20 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
+The model selected was a variation of the model generated by Bayes information criteria (BIC) algorithm. The BIC model included both age and age_7cat with an r-squared of 0.4675. I ran the model including only 1 of the variables (age r-squared = 0.4521,age_7cat r-squared = 0.4658) and selected age_7cat as representation of age. An alternate candidate model generated by Akaike information criterion (AIC) had a higher r-squared but included 20 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
 
 
 ```{r}
@@ -791,6 +792,9 @@ fed_test <- testing(fed_split)
 ```
 
 
+Model stats
+- r-squared for the model is 0.4808 
+- The residual analysis analysis shows several outliers that are impacting the model
 
 
 ```{r}
@@ -856,15 +860,34 @@ ggplot(data = fed_results,
 
 ```
 
+### Machine Learning Model (Random Forest)
+
+Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the variables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.4695 The confusion matrix below depicts that model performance.
+
+![Confusion Matrix](files/fed_ml_cm.png){width=400}
+
+This was an interesting exploration however the linear regression model seems more usable for this particular problem set. 
+
+### Neural Network
+
+Further analysis was conducted by creating a neural network using the neuralnet package. The resulting neural network with associated weights is depicted below. 
+
+![Neural Network](files/fed_nn2.png){width=450}
+<br>
+<br>
+The graph below depicts the mapping of actual cfpb scores to the predicted cfpb scores generated by the neural network. 
+
+![Neural Network](files/fed_nn_pred.png){width=400}
+
 
 
 # iNterpret
 
-The testing of the model indicates a clear relationship between the model variables and the observed cfpb score for the surveyed individuals. The residual graph indicates outliers at the low end and the higher end of the cfpb score. Studying those segments of the population might provide some additional insight into the relevance of the cfpb score to these segments. 
+The testing of the model indicates a clear relationship between the model variables and the observed cfpb score for the surveyed individuals. The residual graph indicates outliers at the low end and the higher end of the cfpb score. Studying those segments of the population might provide some additional insight into the relevance of the cfpb score to the respective populations. 
 
 The cfpb score is based on 10 questions that measure your financial wellbeing. The survey questions are self reported which includes some variability and bias. Self reporting also results in incomplete records as not every individual surveyed answers all of the questions. 
 
-Unsurprisingly variables representing savings rate, age and income appear in both models. This is consistent with some tenets of wealth management. The importance of both income and spending to your financial wellbeing. And more importantly the impact of time. As important as these variable are to financial wellness they are not able to explain more than 30% or 40% of your wellness score. 
+Unsurprisingly variables representing savings rate, age and income appear in both models. This is consistent with the general consensus in wealth management. Most financial advisers will highlight the importance of both income and spending to your financial wellbeing but more importantly the impact of time. As important as these variable are to financial wellness they are not able to explain more than 30% or 40% of your wellness score. 
 
 It is interesting that race, gender, education, house hold composition and education levels are not part of the model. These attributes  . The interrelation between race, gender and education with income is not included in this analysis but could help to explain their absence from the model. These variables could be impacting financial wellness through their impact on income.
 
@@ -880,12 +903,14 @@ There were several challenges associated with this assignment including:
 
 
 # Conclusion
-	
-In reviewing the analysis what jumps out is the impact of early decisions on the overall outcome. The technical execution of the analysis is important but early decison on data to include or exclude in the analysis. This analysis utilized several models with each model generating slightly different results. 
-
-I had not expected to resolve any long standing debates in the financial industry but it has been surprising how many different avenues for analysis or questons arrose from this discussion. 
 
 The linear regression model was more effective than the two machine learning models. The machine learning models struggled to differentiate cases at the high end and the low end of the cfpb score spectrum. 
+	
+In reviewing the analysis what jumps out is the impact of early decisions on the overall outcome. The technical execution of the analysis is important but early decision on the data to include or exclude in the analysis has a large impact on the shape of the model. This analysis utilized several models with each model generating slightly different results. 
+
+I had not expected to resolve any long standing debates in the financial industry but it has been surprising how many different avenues for analysis or questions arose from this discussion. 
+
+
 
 
 	

@@ -1,0 +1,380 @@
+---
+title: "DATA 607 Final Project: Model Selection"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(utils)
+
+library(tidyverse)
+library(tidymodels)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(plyr)
+library(naivebayes)
+
+library(glue)
+library(vip)
+
+library(GGally)
+
+```
+
+
+# Overview
+Stepwise model selection process
+
+## Setup
+
+```{r, results="hide"}
+
+set.seed(1234)
+rm(list=ls())
+
+```
+
+
+```{r, include=FALSE, error=TRUE}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+
+```
+
+
+
+# Consumer Financial Protection Bureau
+
+
+## Download and Tidy dataset from CFPB
+
+```{r}
+
+cfpb_df <- getCFPBFile()
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+
+cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=4000) 
+
+# remove calculated variables 
+cfpb_df <- cfpb_df %>% select(-c(cfpb_score_4cat, fs_skills_score, fs_lm_score, fs_kh_score))
+cfpb_base_df <- cfpb_df
+
+
+# select independent variables
+#cfpb_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat) # 0.3984 
+
+# split data
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, strata = cfpb_score)
+cfpb_training <-  training(cfpb_split)
+cfpb_test <-  testing(cfpb_split)
+
+```
+
+## full model
+
+```{r}
+
+cfpb_result1<-lm(cfpb_score ~ . ,data=cfpb_training)
+summary(cfpb_result1)
+
+```
+
+
+
+
+
+## Stepwise regression both
+
+The function step should be called and the direction is set to both so that the algorithm can add and drop predictors in every iteration. Finally, when dropping/adding any variable will not give a positive impact to our model in terms of performance, the stepwise process is done
+
+
+```{r}
+
+cfpb_results2<-stats::step(cfpb_result1, direction = "both")
+
+```
+
+
+## Stepwise regression Akaike information criterion (AIC)
+
+For AIC and BIC, we use step function again and specify the penalty for the number of freedom. For instance, we have k=2
+ in AIC and k=log(n) in BIC, implying that BIC normally gives a larger penalty on the number of parameters in the model according to the definition of BIC. Once the model selection is done, we should expect a smaller number of predictors in BIC than AIC below.
+
+
+```{r}
+cfpb_result3<- stats::step(cfpb_result1, k=2)
+```
+
+## Bayes information criterion (BIC)
+
+
+```{r}
+
+cfpb_result4<-stats::step(cfpb_result1, k=log(nrow(cfpb_training)))
+
+```
+
+
+## explore both
+
+```{r}
+
+# Step:  AIC=15031.65
+# cfpb_score ~ sample_pop + econ_save_rate + house_value + house_mortgage + 
+#     age_8cat + race + econ_hh_income + region_9base
+
+cfpb_result_c1 <-lm(cfpb_score ~ sample_pop + econ_save_rate + house_value + house_mortgage + 
+    age_8cat + race + econ_hh_income + region_9base,
+     data=cfpb_training)
+summary(cfpb_result_c1)
+
+```
+
+
+## explore Bayes information criterion (BIC)
+
+
+```{r}
+
+# Step:  AIC=18967.84
+# cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income 
+
+cfpb_result_c2 <-lm(cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income, data=cfpb_training)
+summary(cfpb_result_c2)
+
+
+```
+
+
+
+
+
+
+
+
+# Federal Reserve
+
+
+
+
+
+## Download and Tidy dataset from Fed
+
+```{r}
+
+
+# get fed file
+fed_df <- getFedFile()
+fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+
+
+# reduce cfpb dataset
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
+
+
+# remove categorical variable for data set
+fed_df <- fed_df %>% select(-c(cfpb_score_4cat))
+
+# split data
+fed_split <- initial_split(fed_df, prop = 0.8, strata = cfpb_score)
+fed_training <- training(fed_split)
+fed_test <- testing(fed_split)
+
+
+
+```
+
+
+
+
+
+## full model
+
+```{r}
+
+fed_result1<-lm(cfpb_score ~ . ,data=fed_training)
+summary(fed_result1)
+
+
+```
+
+
+
+
+## Stepwise regression both
+
+```{r}
+
+fed_results2<-stats::step(fed_result1, direction = "both")
+
+```
+
+
+
+
+
+## Stepwise regression Akaike information criterion (AIC)
+
+```{r}
+
+fed_result3<- stats::step(fed_result1, k=2)
+
+```
+
+
+
+
+## Bayes information criterion (BIC)
+
+
+```{r}
+
+fed_result4<-stats::step(fed_result1, k=log(nrow(fed_training)))
+
+```
+
+
+
+
+## explore both
+
+```{r}
+
+# Step:  AIC=14863.85
+# cfpb_score ~ gender + age + age_7cat + household_size + hh_child_0.1 + 
+#     hh_child_13.17 + hh_child_18p + emp_status + emp_union + 
+#     health + emp_type + race + edu_cat + race_census + credit_guess + 
+#     econ_saving + econ_inc_4cat + econ_fin_ok + econ_pay_exp400 + 
+#     econ_skip_med
+
+fed_result_c1 <-lm(cfpb_score ~ gender + age + age_7cat + household_size + hh_child_0.1 + 
+    hh_child_13.17 + hh_child_18p + emp_status + emp_union + 
+    health + emp_type + race + edu_cat + race_census + credit_guess + 
+    econ_saving + econ_inc_4cat + econ_fin_ok + econ_pay_exp400 + 
+    econ_skip_med,
+     data=fed_training)
+summary(fed_result_c1)
+
+```
+
+
+
+## explore Bayes information criterion (BIC)
+
+```{r}
+
+# Step:  AIC=15103.63
+# cfpb_score ~ age + age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+#     econ_pay_exp400 + econ_skip_med
+
+
+fed_result_c2 <-lm(cfpb_score ~ age + age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+    econ_pay_exp400 + econ_skip_med,
+     data=fed_training)
+summary(fed_result_c2)
+
+
+```
+
+
+
+## manual mapping
+
+```{r}
+
+# Step: manual forwards regression
+# cfpb_score ~ econ_saving + econ_fin_ok + econ_pay_exp400 + econ_skip_med + edu + credit_guess
+
+fed_result_c3 <-lm(cfpb_score ~ econ_saving + econ_fin_ok + econ_pay_exp400 + 
+                       econ_skip_med + edu + credit_guess,
+     data=fed_training)
+summary(fed_result_c3)
+
+
+
+```
+
+
+
+```{r}
+
+# Step:  AIC=15103.63
+# cfpb_score ~ age + econ_saving + econ_inc_4cat + econ_fin_ok + 
+#     econ_pay_exp400 + econ_skip_med
+
+
+fed_result_c2 <-lm(cfpb_score ~ age + econ_saving + econ_inc_4cat + econ_fin_ok + 
+    econ_pay_exp400 + econ_skip_med,
+     data=fed_training)
+summary(fed_result_c2)
+
+```
+
+
+
+
+```{r}
+
+# Step:  AIC=15103.63
+# cfpb_score ~ age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+#     econ_pay_exp400 + econ_skip_med
+
+
+fed_result_c2 <-lm(cfpb_score ~ age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+    econ_pay_exp400 + econ_skip_med,
+     data=fed_training)
+summary(fed_result_c2)
+
+```
+
+
+
+
+# final models - CFPB
+
+```{r}
+
+# Step:  AIC=18967.84
+# cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income 
+
+cfpb_result_c2 <-lm(cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income, data=cfpb_training)
+summary(cfpb_result_c2)
+
+
+```
+
+
+# final model - FED
+
+```{r}
+
+# Step:  AIC=15103.63
+# cfpb_score ~ age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+#     econ_pay_exp400 + econ_skip_med
+
+
+fed_result_c2 <-lm(cfpb_score ~ age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+    econ_pay_exp400 + econ_skip_med,
+     data=fed_training)
+summary(fed_result_c2)
+
+```
+
+

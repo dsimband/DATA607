@@ -1,5 +1,5 @@
 ---
-title: "DATA 607 Final Project: Predicting Financial Well Being"
+title: "DATA 607 Final Project: Visualization"
 author: "David Simbandumwe"
 output:
   prettydoc::html_pretty:
@@ -27,13 +27,13 @@ library(glue)
 library(vip)
 
 library(GGally)
+library(gridExtra)
 
 ```
 
 
 # Overview
-
-
+Visualize the results of the CFPB and the FED surveys
 
 ## Setup
 
@@ -59,19 +59,26 @@ source(fun_file_name, local = knitr::knit_global())
 
 ```{r}
 
+# get cfpb file
 cfpb_df <- getCFPBFile()
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
 
-cfpb_df <- slice_sample(cfpb_df,n=5000) 
-#cfpb_df <- cfpb_df %>% select(-c(sample_pop,poverty_stat,fs_skills_score,fs_lm_score, fs_kh_score))
+# reduce cfpb data set
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=4000) 
+cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
 
 
-
+summary(cfpb_df)
 
 ```
 
 
 
-
+## Visualize CFPB survey data
 
 ```{r}
 
@@ -90,20 +97,15 @@ ggscatmat(data=cfpb_df, color="econ_hh_income", corMethod = "spearman", alpha=0.
 
 ```{r}
 
-par(mfrow=c(2,2)) 
-
-
 # econ_hh_income 
 ggplot(cfpb_df, aes(x=econ_hh_income)) +
   geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
   coord_flip() +
   labs(title = "econ_hh_income")
 
-ggplot(cfpb_df, aes(x=econ_hh_income, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_hh_income")
-
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_hh_income, color=econ_hh_income)) +
+  labs (title = "econ_hh_income")
 
 ggplot(cfpb_df,
     aes(cfpb_score, fill = econ_hh_income, y = stat(density))) +
@@ -120,10 +122,9 @@ ggplot(cfpb_df, aes(x=econ_save_rate)) +
   coord_flip() +
   labs(title = "econ_save_rate")
 
-ggplot(cfpb_df, aes(x=econ_save_rate, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_save_rate")
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_save_rate, color=econ_save_rate)) +
+  labs (title = "econ_save_rate")
 
 ggplot(cfpb_df,
     aes(cfpb_score, fill = econ_save_rate, y = stat(density))) +
@@ -134,56 +135,15 @@ ggplot(cfpb_df,
 
 
 
-# house_value
-ggplot(cfpb_df, aes(x=house_value)) +
-  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
-  coord_flip() +
-  labs(title = "house_value")
-
-ggplot(cfpb_df, aes(x=house_value, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "house_value")
-
-ggplot(cfpb_df,
-    aes(cfpb_score, fill = house_value, y = stat(density))) +
-    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
-    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
-    scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (by house_value)")
-
-
-
-# house_mortgage
-ggplot(cfpb_df, aes(x=house_mortgage)) +
-  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
-  coord_flip() +
-  labs(title = "house_mortgage")
-
-ggplot(cfpb_df, aes(x=house_mortgage, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "house_mortgage")
-
-ggplot(cfpb_df,
-    aes(cfpb_score, fill = house_mortgage, y = stat(density))) +
-    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
-    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
-    scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (by house_mortgage)")
-
-
-
 # age_8cat
 ggplot(cfpb_df, aes(x=age_8cat)) +
   geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
   coord_flip() +
   labs(title = "age_8cat")
 
-ggplot(cfpb_df, aes(x=age_8cat, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "age_8cat")
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=age_8cat, color=age_8cat)) +
+  labs (title = "age_8cat")
 
 ggplot(cfpb_df,
     aes(cfpb_score, fill = age_8cat, y = stat(density))) +
@@ -194,16 +154,34 @@ ggplot(cfpb_df,
 
 
 
+# house_mortgage
+ggplot(cfpb_df, aes(x=house_mortgage)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "house_mortgage")
+
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=house_mortgage, color=house_mortgage)) +
+  labs (title = "house_mortgage")
+
+ggplot(cfpb_df,
+    aes(cfpb_score, fill = house_mortgage, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by house_mortgage)")
+
+
+
 # race
 ggplot(cfpb_df, aes(x=race)) +
   geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
   coord_flip() +
   labs(title = "race")
 
-ggplot(cfpb_df, aes(x=race, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "race")
+ggplot(data = cfpb_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=race, color=race)) +
+  labs (title = "race")
 
 ggplot(cfpb_df,
     aes(cfpb_score, fill = race, y = stat(density))) +
@@ -225,21 +203,26 @@ ggplot(cfpb_df,
 
 ```{r}
 
+# get fed file
 fed_df <- getFedFile()
+fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
 
-fed_df <- slice_sample(fed_df,n=5000)
-# fed_df <- fed_df %>% select(-c(age_4cat, age_7cat, starts_with("age_"),starts_with("hh_child_")
-#                                ,race_census
-#                                ))
+# reduce cfpb dataset
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
 
-fed_df <- fed_df %>% select(cfpb_score, econ_fin_ok, econ_skip_med, econ_pay_exp400, age, econ_saving, health)
+fed_df <- fed_df %>% select(cfpb_score, age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, 
+                            econ_pay_exp400, econ_skip_med)
 
+summary(fed_df)
 
 ```
 
 
 
-
+## Visualize Fed survey data
 
 ```{r}
 
@@ -254,10 +237,64 @@ ggscatmat(data=fed_df, color="econ_skip_med", corMethod = "spearman", alpha=0.2)
 
 
 
-
-
-
 ```{r}
+
+
+# age_7cat
+ggplot(fed_df, aes(x=age_7cat)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "age_7cat")
+
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=age_7cat, color=age_7cat)) +
+  labs (title = "age_7cat")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = age_7cat, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by age_7cat)")
+
+
+
+# econ_saving
+ggplot(fed_df, aes(x=econ_saving)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_saving")
+
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_saving, color=econ_saving)) +
+  labs (title = "econ_saving")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = econ_saving, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_saving)")
+
+
+
+# econ_inc_4cat
+ggplot(fed_df, aes(x=econ_inc_4cat)) +
+  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
+  coord_flip() +
+  labs(title = "econ_inc_4cat")
+
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_inc_4cat, color=econ_inc_4cat)) +
+  labs (title = "econ_inc_4cat")
+
+ggplot(fed_df,
+    aes(cfpb_score, fill = econ_inc_4cat, y = stat(density))) +
+    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
+    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
+    scale_fill_brewer(palette="Spectral") +
+    labs(title = "CFPB Score (by econ_inc_4cat)")
+
 
 
 # econ_fin_ok
@@ -266,10 +303,9 @@ ggplot(fed_df, aes(x=econ_fin_ok)) +
   coord_flip() +
   labs(title = "econ_fin_ok")
 
-ggplot(fed_df, aes(x=econ_fin_ok, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_fin_ok")
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_fin_ok, color=econ_fin_ok)) +
+  labs (title = "econ_fin_ok")
 
 ggplot(fed_df,
     aes(cfpb_score, fill = econ_fin_ok, y = stat(density))) +
@@ -286,10 +322,9 @@ ggplot(fed_df, aes(x=econ_skip_med)) +
   coord_flip() +
   labs(title = "econ_skip_med")
 
-ggplot(fed_df, aes(x=econ_skip_med, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_skip_med")
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_skip_med, color=econ_skip_med)) +
+  labs (title = "econ_skip_med")
 
 ggplot(fed_df,
     aes(cfpb_score, fill = econ_skip_med, y = stat(density))) +
@@ -307,10 +342,9 @@ ggplot(fed_df, aes(x=econ_pay_exp400)) +
   coord_flip() +
   labs(title = "econ_pay_exp400")
 
-ggplot(fed_df, aes(x=econ_pay_exp400, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_pay_exp400")
+ggplot(data = fed_df) +
+  geom_boxplot(mapping = aes(x=cfpb_score, y=econ_pay_exp400, color=econ_pay_exp400)) +
+  labs (title = "econ_skip_med")
 
 ggplot(fed_df,
     aes(cfpb_score, fill = econ_pay_exp400, y = stat(density))) +
@@ -320,64 +354,6 @@ ggplot(fed_df,
     labs(title = "CFPB Score (by econ_pay_exp400)")
 
 
-# age
-ggplot(fed_df, aes(x=age)) +
-  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
-  coord_flip() +
-  labs(title = "age")
-
-ggplot(fed_df, aes(x=age, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "age")
-
-ggplot(fed_df,
-    aes(cfpb_score, fill = age, y = stat(density))) +
-    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
-    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
-    scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (by age)")
-
-
-
-
-# econ_saving
-ggplot(fed_df, aes(x=econ_saving)) +
-  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
-  coord_flip() +
-  labs(title = "econ_saving")
-
-ggplot(fed_df, aes(x=econ_saving, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  labs(title = "econ_saving")
-
-ggplot(fed_df,
-    aes(cfpb_score, fill = econ_saving, y = stat(density))) +
-    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
-    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
-    scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (by econ_saving)")
-
-
-# health
-ggplot(fed_df, aes(x=health)) +
-  geom_bar(color="white", fill="black", alpha = 0.6, size = 0.1) +
-  coord_flip() +
-  labs(title = "health")
-
-ggplot(fed_df, aes(x=health, y=cfpb_score)) +
-  geom_point(alpha = 0.4, size = 1)+
-  coord_flip() +
-  geom_smooth() +
-  labs(title = "health")
-
-ggplot(fed_df,
-    aes(cfpb_score, fill = health, y = stat(density))) +
-    geom_histogram(binwidth = 1, alpha = 0.7, bins = 100, color="white",size = 0.1) +
-    geom_vline(aes(xintercept = mean(cfpb_score)), linetype = "dashed", size = 0.2) +
-    scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (by health)")
 
 
 ```
@@ -390,14 +366,8 @@ ggplot(fed_df,
 
 
 
-# Analysis
 
 
-# Conclusion
-	
-	
-	
-	
-	
-	
+
+
 	
