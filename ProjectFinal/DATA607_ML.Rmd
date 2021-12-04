@@ -79,8 +79,10 @@ cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 1
 cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
 
 # reduce cfpb data set
-cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=5000) 
-cfpb_df <- cfpb_df %>% select(cfpb_score, cfpb_score_4cat, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=4000) 
+#cfpb_df <- cfpb_df %>% select(cfpb_score, cfpb_score_4cat, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+cfpb_df <- cfpb_df %>% select(cfpb_score_4cat, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+
 
 
 vis_miss(cfpb_df, sort_miss = TRUE)
@@ -189,15 +191,15 @@ last_fit_rf %>%
 last_fit_rf %>% 
   pluck(".workflow", 1) %>%   
   extract_fit_parsnip() %>% 
-  vip(num_features = 25) +
-  labs(title = "CFPB Variable Importance")  
+  vip(num_features = 15) +
+  labs(title = "Variable Importance (cfpb data set")  
 
 
 last_fit_rf %>%
   collect_predictions() %>% 
   conf_mat(cfpb_score_4cat, .pred_class) %>% 
   autoplot(type = "heatmap") +
-  labs(title = "CFPB Confusion Matrix (cfpb score)")
+  labs(title = "Confusion Matrix (cfpb data set)")
 
 
 ```
@@ -224,7 +226,7 @@ fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100
                            include.lowest=TRUE) 
 
 # reduce cfpb dataset
-fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=5000) 
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
 
 fed_df <- fed_df %>% select(cfpb_score, cfpb_score_4cat,age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, 
                             econ_pay_exp400, econ_skip_med)
@@ -342,14 +344,14 @@ last_fit_fed_rf %>%
   pluck(".workflow", 1) %>%   
   extract_fit_parsnip() %>% 
   vip(num_features = 10) +
-  labs(title = "Fed Variable Importance")    
+  labs(title = "Variable Importance (Fed data set)")    
 
 
 last_fit_fed_rf %>%
   collect_predictions() %>% 
   conf_mat(cfpb_score_4cat, .pred_class) %>% 
   autoplot(type = "heatmap") +
-  labs(title = "Fed Confusion Matrix (cfpb score)")
+  labs(title = "Confusion Matrix (Fed data set)")
 
 
 

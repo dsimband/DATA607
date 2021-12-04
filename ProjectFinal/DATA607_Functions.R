@@ -383,3 +383,7 @@ normalize <- function(x) {
     return ((x - min(x)) / (max(x) - min(x)))
 }
 
+un_normalize <- function(norm, denorm) {
+    return (norm * (max(denorm) - min(denorm)) + min(denorm))
+}
+

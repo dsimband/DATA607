@@ -17,6 +17,7 @@ library(tidyverse)
 library(datasets)
 library(neuralnet)
 library(NeuralNetTools)
+library(ModelMetrics)
 library(caret)
 library(tidymodels)
 library(dplyr)
@@ -83,7 +84,7 @@ cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 1
 cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
 
 # reduce cfpb data set
-cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=1000) 
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=5000) 
 cfpb_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
 
 summary(cfpb_df$cfpb_score)
@@ -154,21 +155,21 @@ ggplot(data = t1,
        mapping = aes(x = predict, y = actual)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +    
-  labs(title = 'CFPB Score Neural Net (Actual vs Prediction) ',
+  labs(title = 'Neural Net (cfpb data set) ',
        x = 'Predicted',
        y = 'Actual')
 
 
 ggplot(data = t1) +
   geom_boxplot(mapping = aes(x=diff)) +
-  labs (title = "CFPB Score Neural Net (Std Error)")
+  labs (title = "Std Error - Neural Net (cfpb data set)")
 
 ggplot(t1,
     aes(diff, y = stat(density))) +
     geom_histogram(binwidth = .02, alpha = 0.7, bins = 100, color="white",size = 0.1) +
     geom_vline(aes(xintercept = mean(diff)), linetype = "dashed", size = 0.8, color="red") +
     scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (Std Error)")
+    labs(title = "Std Error - Neural Net (cfpb data set)")
 
 
 ```
@@ -217,20 +218,20 @@ ggplot(data = t2,
        mapping = aes(x = predict, y = actual)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +    
-  labs(title = 'CFPB Score Neural Net (5 hidden layers) ',
+  labs(title = 'Neural Net - 5 hidden layers (cfpb data set)',
        x = 'Predicted',
        y = 'Actual')
 
 ggplot(data = t2) +
   geom_boxplot(mapping = aes(x=diff)) +
-  labs (title = "CFPB Score Neural Net (Std Error)")
+  labs (title = "Std Error - Neural Net (cfpb data set)")
 
 ggplot(t2,
     aes(diff, y = stat(density))) +
     geom_histogram(binwidth = .02, alpha = 0.7, bins = 100, color="white",size = 0.1) +
     geom_vline(aes(xintercept = mean(diff)), linetype = "dashed", size = 0.8, color="red") +
     scale_fill_brewer(palette="Spectral") +
-    labs(title = "CFPB Score (Std Error)")
+    labs(title = "Std Error - Neural Net (cfpb data set)")
 
 ```
 
@@ -244,7 +245,7 @@ ggplot(t2,
 
 
 
-#Federal Reserve System Survey
+# Federal Reserve System Survey
 
 ## Download and Tidy dataset from FED
 
@@ -266,7 +267,7 @@ fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100
                            include.lowest=TRUE) 
 
 # reduce cfpb dataset
-fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=1000) 
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=5000) 
 
 fed_df <- fed_df %>% select(cfpb_score, age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, 
                             econ_pay_exp400, econ_skip_med)
@@ -336,21 +337,21 @@ ggplot(data = t1,
        mapping = aes(x = predict, y = actual)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +    
-  labs(title = 'FED CFPB Score Neural Net (Std Error) ',
+  labs(title = 'Std Error - Neural Net (FED data set)',
        x = 'Predicted',
        y = 'Actual')
 
 
 ggplot(data = t1) +
   geom_boxplot(mapping = aes(x=diff)) +
-  labs (title = "CFPB Score Neural Net (Std Error)")
+  labs (title = "Std Error - Neural Net (FED data set)")
 
 ggplot(t1,
     aes(diff, y = stat(density))) +
     geom_histogram(binwidth = .02, alpha = 0.7, bins = 100, color="white",size = 0.1) +
     geom_vline(aes(xintercept = mean(diff)), linetype = "dashed", size = 0.8, color="red") +
     scale_fill_brewer(palette="Spectral") +
-    labs(title = "FED CFPB Score (Std Error)")
+    labs(title = "Std Error - Neural Net (FED data set)")
 
 ```
 
@@ -379,6 +380,7 @@ results2 <- compute(nn2, test_data[2:len])
 predicted_score2 <- results2$net.result
 
 
+
 ```
 
 
@@ -387,30 +389,34 @@ t2 <- tibble(
     predict = results2$net.result,
     actual = test_data$cfpb_score
 )
-t2 <- t2 %>% mutate (diff = predict - actual)
-
+t2 <- t2 %>% mutate (  
+    diff = actual - predict,
+    dev = (actual - predict) / actual
+    )
+#accuracy_res = 1-abs(mean(t2$dev))
 summary(t2)
+
 
 
 ggplot(data = t2,
        mapping = aes(x = predict, y = actual)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +    
-  labs(title = 'FED CFPB Score Neural Net (5 hidden layers) ',
+  labs(title = 'Neural Net 5 layers (FED data set) ',
        x = 'Predicted',
        y = 'Actual')
 
 
 ggplot(data = t2) +
   geom_boxplot(mapping = aes(x=diff)) +
-  labs (title = "CFPB Score Neural Net (Std Error)")
+  labs (title = "Std Error - Neural Net (FED data set")
 
 ggplot(t2,
     aes(diff, y = stat(density))) +
     geom_histogram(binwidth = .02, alpha = 0.7, bins = 100, color="white",size = 0.1) +
     geom_vline(aes(xintercept = mean(diff)), linetype = "dashed", size = 0.8, color="red") +
     scale_fill_brewer(palette="Spectral") +
-    labs(title = "FED CFPB Score (Std Error)")
+    labs(title = "Std Error - Neural Net (FED data set)")
 
 
 ```

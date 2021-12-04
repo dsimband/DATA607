@@ -43,7 +43,7 @@ This is a broad definition but it includes several key concepts such as:
 - Feelings towards your finances
 
 
-Intuitively we understand the importance of financial wellness to an individuals immediate financial stability, their long-term aggregation of wealth and financial sustainability in retirement. These benefits are well documented, studied and highlighted by financial advisers and wealth management firms. However the impact of financial wellness on your emotional and mental health should not be ignored our understated. The stress, anxiety, depression, sleep deprivation or even lack of motivation that comes with poorly handled money matters will impact all aspects of your life. 
+Intuitively I understand the importance of financial wellness to an individuals immediate financial stability, their long-term aggregation of wealth and financial sustainability in retirement. These benefits are well documented, studied and highlighted by financial advisers and wealth management firms. However the impact of financial wellness on your emotional and mental health should not be ignored our understated. The stress, anxiety, depression, sleep deprivation or even lack of motivation that comes with poorly handled money matters will impact all aspects of your life. 
 
 
 | *When people are in control of their money, they’re in control of their lives. They’re happier, less anxious and more empowered.* [*nudge*](https://www.nudge-global.com) 
@@ -58,7 +58,7 @@ For this project I have identified two data sets that share a common measure of 
 
 There are numerous studies of financial wellness sponsored by financial firms, industry groups and government agencies. I choose to focus on two studies:
 
-- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/) The PUF survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
+- Consumer Financial Protection Bureau - Financial Wellness Survey [*Financial well-being data*](https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/) The Public Use File (PUF) survey results can be accessed as a csv file [*Financial well-being survey data*](https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv)
 
 - Federal Reserve System - Survey of Household Economic and Decision making  [*Federal Reserve Household Economic Decisions*](https://www.federalreserve.gov/consumerscommunities/shed_data.htm) The SHED survey results can be accessed as a zip file [*Survey of Household Economics and Decisionmaking 2020*](https://www.federalreserve.gov/consumerscommunities/files/SHED_public_use_data_2020_(CSV).zip)
 
@@ -72,7 +72,7 @@ The score is calculated using 10 questions survey:
 
 1. I could handle a major unexpected expense
 2. I am securing my financial future
-3. Because of my money situation, I feel like I will never have the things I want in life*
+3. Because of my money situation, I feel like I will never have the things I want in life
 4. I can enjoy life because of the way I’m managing my money
 5. I am just getting by financially
 6. I am concerned that the money I have or will save won’t last
@@ -249,6 +249,8 @@ The scrub step in the process leverages the two code books for the survey to fil
 
 # get cfpb file
 cfpb_df <- getCFPBFile()
+cfpb_df <- cfpb_df %>% filter( cfpb_score > 0)
+
 cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
                            labels = c("< 40","40-60","60-80","80-100"),
                            right = FALSE,
@@ -276,6 +278,7 @@ s_df <- add_column(s_df,"fed_freq" = count(fed_df$cfpb_score_4cat)$freq)
 fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
 s_df <- add_column(s_df,"fed_filter" = levels(count(fed_df$cfpb_score_4cat)$x))
 s_df <- add_column(s_df,"fed_filter_freq" = count(fed_df$cfpb_score_4cat)$freq)
+
 
 
 ```
@@ -370,7 +373,9 @@ Each of the survey questions includes the option not to provide answer. This cre
 
 ```{r}
 
-cfpb_tmp_df <- cfpb_df %>% select(cfpb_score, econ_hh_income, econ_save_rate, age_8cat)
+#econ_save_rate + house_mortgage + age_8cat + econ_hh_income
+
+cfpb_tmp_df <- cfpb_df %>% select(cfpb_score, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
 summary(cfpb_tmp_df)
 
 ```
@@ -477,7 +482,7 @@ count(cfpb_df$house_mortgage)
 
 ## Federal Reserve System
 
-The data set from the Federal Reserve survey includes several questions that produce variable with overlapping measures. This includes the variables that measure education level, employment, house hold composition and economic circumstances. As part of the modeling selection process we will look to rationalize the list of variables so that we do not include several variables that measure the same underlying characteristic. Similar to the survey data from the CFPB a portion of the respondent declined to answer specific questions. We will filter out incomplete cases as required by the model being used. 
+The data set from the Federal Reserve survey includes several questions that produce variable with overlapping measures. This includes the variables that measure education level, employment, house hold composition and economic circumstances. As part of the modeling selection process I will look to rationalize the list of variables so that I do not include several variables that measure the same underlying characteristic. Similar to the survey data from the CFPB a portion of the respondent declined to answer specific questions. I will filter out incomplete cases as required by the model being used. 
 
 
 **Observations**
@@ -488,6 +493,10 @@ The data set from the Federal Reserve survey includes several questions that pro
 
 
 ```{r}
+
+# age_7cat + econ_saving + econ_inc_4cat + econ_fin_ok + 
+#     econ_pay_exp400 + econ_skip_med
+
 
 #fed_tmp_df <- fed_df %>% select(cfpb_score, econ_saving, econ_fin_ok, econ_pay_exp400, econ_skip_med, edu, credit_guess)
 fed_tmp_df <- fed_df %>% select(cfpb_score, age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, econ_pay_exp400, econ_skip_med) #0.4675
@@ -591,7 +600,7 @@ ggplot(fed_df,
 
 # Model
 
-This analysis will focus on a linear regression model as the foundation of the conclusions. However one of the goals for this project was to explore different data science models. To these ends we will touch on a random forest model and neural network model that will utilize the same data set to generate a predictive model. 
+This analysis will focus on a linear regression model as the foundation of the conclusions. However one of the goals for this project was to explore different data science models. To these ends I will touch on a random forest model and neural network model that will utilize the same data set to generate a predictive model. 
 
 <br>
 **The analysis includes the following models:**
@@ -617,7 +626,8 @@ The residual analysis from the CFPB model and Federal Reserve model roughly adhe
 The analysis started with a review of the survey code book to identify candidate variables for the analysis. Then relying on the findngs from each survey, and industry knowledge I conducted an initial variable selection. This selection process was used as a starting point, additional analysis could be conducted to refine the initial lists. 
 
 
-24 variables from the CFPB Survey. 
+**24 variables from the CFPB Survey.** 
+
 - house hold structure
 - housing economics and ownership characteristics
 - income
@@ -626,7 +636,8 @@ The analysis started with a review of the survey code book to identify candidate
 - measures of financial knowledge and financial wellness
 
 
-43 variable from the Fed Survey file were selected.
+**43 variable from the Fed Survey file were selected.**
+
 - house hold structure
 - housing economics and ownership characteristics
 - income
@@ -644,12 +655,11 @@ I used three automated model selection methods from the tidyverse packages for s
 ## Consumer Financial Protection Bureau 
 
 The final model for the CFPB survey data included
+
 - econ_save_rate
 - house_mortgage
 - age_8cat
 - econ_hh_income
-
-The model selected was generated by Bayes information criteria (BIC) algorithm, it had an r-squard of 0.4167 based on the 4 variables above. The alternative model had an r-squared of 0.4248 based on 8 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
 
 
 
@@ -667,10 +677,6 @@ cfpb_test <-  testing(cfpb_split)
 ```
 
 
-
-Model stats
-- r-squared for the model is 0.4118
-- The residual analysis analysis shows several outliers that are impacting the model
 
 
 ```{r}
@@ -700,7 +706,7 @@ tidy(lm_fit)
 glance(lm_fit)  
 
 # variable importance
-vip(lm_fit, num_features=25)
+vip(lm_fit, num_features=15)
 
 ```
 
@@ -731,7 +737,7 @@ ggplot(data = cfpb_results,
   geom_point(color = '#006EA1') +
   geom_smooth(method = lm) +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
-  labs(title = 'Linear Regression Results - CFPB Score',
+  labs(title = 'Linear Regression Results CFPB data set)',
        x = 'Predicted',
        y = 'Actual')
 
@@ -741,7 +747,7 @@ ggplot(data = cfpb_results,
 
 ### Machine Learning Model (Random Forest)
 
-Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the varaiables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.5055. The confusion matrix below depicts that model performance. The model had difficulties predicting cfpb scores values below 40 and above 80.
+Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the varaiables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.505. The confusion matrix below depicts that model performance. The model had difficulties predicting cfpb scores values below 40 and above 80.
 
 ![Confusion Matrix](files/cfpb_ml_cm.png){width=400}
 This was an interesting exploration however the linear regression model seems more usable for this particular problem set. 
@@ -772,8 +778,6 @@ The final model for the CFPB survey data included
 - econ_fin_ok
 - econ_pay_exp400 
 - econ_skip_med
-    
-The model selected was a variation of the model generated by Bayes information criteria (BIC) algorithm. The BIC model included both age and age_7cat with an r-squared of 0.4675. I ran the model including only 1 of the variables (age r-squared = 0.4521,age_7cat r-squared = 0.4658) and selected age_7cat as representation of age. An alternate candidate model generated by Akaike information criterion (AIC) had a higher r-squared but included 20 variables. It should be noted that although I used the same seed in both files the resulting r-squared is slightly different for the parsnip linear regression model. 
 
 
 ```{r}
@@ -792,9 +796,6 @@ fed_test <- testing(fed_split)
 ```
 
 
-Model stats
-- r-squared for the model is 0.4808 
-- The residual analysis analysis shows several outliers that are impacting the model
 
 
 ```{r}
@@ -819,7 +820,7 @@ tidy(lm_fit)
 glance(lm_fit)  
 
 # variable importance
-vip(lm_fit, num_features=25)
+vip(lm_fit, num_features=15)
 
 ```
 
@@ -854,7 +855,7 @@ ggplot(data = fed_results,
   geom_point(color = '#006EA1') +
   geom_smooth(method = lm) +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
-  labs(title = 'Linear Regression - Fed CFPB Score',
+  labs(title = 'Linear Regression (Fed data set)',
        x = 'Predicted',
        y = 'Actual')
 
@@ -862,7 +863,7 @@ ggplot(data = fed_results,
 
 ### Machine Learning Model (Random Forest)
 
-Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the variables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.4695 The confusion matrix below depicts that model performance.
+Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the variables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.468 The confusion matrix below depicts that model performance.
 
 ![Confusion Matrix](files/fed_ml_cm.png){width=400}
 

@@ -1337,8 +1337,9 @@ a.sourceLine {
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step:  AIC=18967.84</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income </span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>cfpb_result_c2 <span class="ot">&lt;-</span><span class="fu">lm</span>(cfpb_score <span class="sc">~</span> econ_save_rate <span class="sc">+</span> house_mortgage <span class="sc">+</span> age_8cat <span class="sc">+</span> econ_hh_income, <span class="at">data=</span>cfpb_training)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cfpb_result_c2)</span></code></pre></div>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>cfpb_result_c2 <span class="ot">&lt;-</span><span class="fu">lm</span>(cfpb_score <span class="sc">~</span> econ_save_rate <span class="sc">+</span> house_mortgage <span class="sc">+</span> age_8cat <span class="sc">+</span> econ_hh_income, <span class="at">data=</span>cfpb_training)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cfpb_result_c2)</span></code></pre></div>
 <pre><code>## 
 ## Call:
 ## lm(formula = cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + 

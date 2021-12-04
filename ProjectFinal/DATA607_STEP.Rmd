@@ -153,6 +153,7 @@ summary(cfpb_result_c1)
 # Step:  AIC=18967.84
 # cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income 
 
+
 cfpb_result_c2 <-lm(cfpb_score ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income, data=cfpb_training)
 summary(cfpb_result_c2)
 
