@@ -1,0 +1,370 @@
+---
+title: "DATA 607 Final Project: Random Forest"
+author: "David Simbandumwe"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(utils)
+
+library(tidyverse)
+library(tidymodels)
+library(textrecipes)
+library(discrim)
+library(dplyr)
+library(plyr)
+
+library(stringr)
+library(glue)
+library(purrr)
+
+library(visdat)
+library(GGally)
+library(vip)
+
+library(recipes)
+library(modeldata)
+library(themis)
+
+
+```
+
+
+# Overview
+Applying a random forest model to the survey data using the same variables from the linear regression models. 
+
+
+
+
+
+## Setup
+
+```{r, results="hide"}
+set.seed(1234)
+rm(list=ls())
+```
+
+
+```{r, include=FALSE, error=TRUE}
+
+fun_file_name <- glue(getwd(), "/ProjectFinal/DATA607_Functions.R")
+source(fun_file_name)
+
+```
+
+
+
+# Consumer Financial Protection Bureau Survey
+
+
+
+## Download and Tidy dataset from CFPB
+
+```{r}
+
+
+# get cfpb file
+cfpb_df <- getCFPBFile()
+cfpb_df$cfpb_score_4cat <- cut(cfpb_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+cfpb_df <- cfpb_df %>% filter(cfpb_score >= 0)
+
+# reduce cfpb data set
+cfpb_df <- slice_sample(cfpb_df, weight_by=cfpb_score_4cat ,n=4000) 
+#cfpb_df <- cfpb_df %>% select(cfpb_score, cfpb_score_4cat, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+cfpb_df <- cfpb_df %>% select(cfpb_score_4cat, econ_save_rate, house_mortgage, age_8cat, econ_hh_income)
+
+
+
+vis_miss(cfpb_df, sort_miss = TRUE)
+
+```
+
+
+
+## prepare data
+
+```{r}
+
+
+# Put 3/4 of the data into the training set 
+cfpb_split <- initial_split(cfpb_df, prop = 0.8, strata = cfpb_score_4cat)
+
+# Create dataframes for the two sets:
+cfpb_train_data <- training(cfpb_split) 
+cfpb_test_data <- testing(cfpb_split)
+
+
+# define recipts 
+cfpb_rec <-
+  recipe(cfpb_score_4cat ~ econ_save_rate + house_mortgage + age_8cat + econ_hh_income, 
+         data = cfpb_train_data) %>%
+  step_naomit(everything(), skip = TRUE) %>% 
+  step_upsample(cfpb_score_4cat, over_ratio = .5) %>%
+  step_novel(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_zv(all_numeric(), -all_outcomes()) %>%
+  step_corr(all_predictors(), threshold = 0.7, method = "spearman") 
+
+
+summary(cfpb_rec)
+
+
+
+# folds and spec
+cv_folds <-
+ vfold_cv(cfpb_train_data, 
+          v = 5, 
+          strata = cfpb_score_4cat) 
+
+
+rf_spec <- 
+  rand_forest() %>% 
+  set_engine("ranger", importance = "impurity") %>% 
+  set_mode("classification")
+
+
+```
+
+
+
+
+
+## tune workflow
+
+```{r}
+
+
+# workflow
+rf_wflow <-
+ workflow() %>%
+ add_recipe(cfpb_rec) %>% 
+ add_model(rf_spec) 
+
+
+# resample
+rf_res <-
+  rf_wflow %>% 
+  fit_resamples(
+    resamples = cv_folds, 
+    metrics = metric_set(recall, precision, f_meas,accuracy, kap,roc_auc, sens, spec),
+    control = control_resamples(save_pred = TRUE)
+    ) 
+rf_res %>%  collect_metrics(summarize = TRUE)
+
+
+rf_metrics <- 
+  rf_res %>% 
+  collect_metrics(summarise = TRUE) %>%
+  mutate(model = "Random Forest")
+
+
+```
+
+
+
+## Final Fit
+
+```{r}
+
+
+last_fit_rf <- last_fit(rf_wflow, 
+                        split = cfpb_split,
+                        metrics = metric_set(recall, precision, f_meas,accuracy, kap, roc_auc, sens, spec)
+                        )
+
+
+last_fit_rf %>% 
+  collect_metrics()
+
+
+last_fit_rf %>% 
+  pluck(".workflow", 1) %>%   
+  extract_fit_parsnip() %>% 
+  vip(num_features = 15) +
+  labs(title = "Variable Importance (cfpb data set")  
+
+
+last_fit_rf %>%
+  collect_predictions() %>% 
+  conf_mat(cfpb_score_4cat, .pred_class) %>% 
+  autoplot(type = "heatmap") +
+  labs(title = "Confusion Matrix (cfpb data set)")
+
+
+```
+
+
+# Federal Reserve System Survey
+
+## Download and Tidy dataset from FED
+
+```{r}
+
+# get fed file
+fed_df <- getFedFile()
+
+#filter data
+fed_df <- fed_df %>% drop_na()
+fed_df <- fed_df %>% filter(!(econ_saving == "" |  credit_guess =="" | health ==""))
+fed_df$credit_guess <- str_replace_all(fed_df$credit_guess, "[^[:alnum:]]", "")
+
+
+fed_df$cfpb_score_4cat <- cut(fed_df$cfpb_score, breaks = c(-10, 40, 60, 80, 100),
+                           labels = c("< 40","40-60","60-80","80-100"),
+                           right = FALSE,
+                           include.lowest=TRUE) 
+
+# reduce cfpb dataset
+fed_df <- slice_sample(fed_df, weight_by=cfpb_score_4cat ,n=4000) 
+
+fed_df <- fed_df %>% select(cfpb_score, cfpb_score_4cat,age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, 
+                            econ_pay_exp400, econ_skip_med)
+
+
+
+vis_miss(fed_df, sort_miss = TRUE)
+
+
+```
+
+
+
+## prepare data
+
+```{r}
+
+
+# Put 3/4 of the data into the training set 
+fed_split <- initial_split(fed_df, 
+                           prop = .8, 
+                           strata = cfpb_score_4cat)
+
+# Create dataframes for the two sets:
+fed_train_data <- training(fed_split) 
+fed_test_data <- testing(fed_split)
+
+
+
+# define recipts 
+fed_rec <-
+  recipe(cfpb_score_4cat ~ age_7cat, econ_saving, econ_inc_4cat, econ_fin_ok, econ_pay_exp400, econ_skip_med, 
+         data = fed_train_data) %>%
+  step_naomit(everything(), skip = TRUE) %>% 
+  step_upsample(cfpb_score_4cat, over_ratio = .5) %>%    
+  step_novel(all_nominal(), -all_outcomes()) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>%
+  step_zv(all_numeric(), -all_outcomes()) %>%
+  step_corr(all_predictors(), threshold = 0.7, method = "spearman", skip = TRUE) 
+
+
+summary(fed_rec)
+
+
+
+
+# folds and spec
+cv_fed_folds <-
+ vfold_cv(fed_train_data, 
+          v = 5, 
+          strata = cfpb_score_4cat) 
+
+
+rf_fed_spec <- 
+  rand_forest() %>% 
+  set_engine("ranger", importance = "impurity") %>% 
+  set_mode("classification")
+
+```
+
+
+
+
+## tune workflow
+
+```{r}
+
+
+# workflow
+rf_fed_wflow <-
+ workflow() %>%
+ add_recipe(fed_rec) %>% 
+ add_model(rf_fed_spec) 
+
+
+# resample
+rf_fed_res <-
+  rf_fed_wflow %>% 
+  fit_resamples(
+    resamples = cv_fed_folds, 
+    metrics = metric_set(recall, precision, f_meas,accuracy, kap,roc_auc, sens, spec),
+    control = control_resamples(save_pred = TRUE)
+    ) 
+
+rf_fed_res %>%  collect_metrics(summarize = TRUE)
+
+
+rf_fed_metrics <- 
+  rf_fed_res %>% 
+  collect_metrics(summarise = TRUE) %>%
+  mutate(model = "Random Forest")
+
+
+```
+
+
+
+## Final Fit
+
+```{r}
+
+
+last_fit_fed_rf <- last_fit(rf_fed_wflow, 
+                        split = fed_split,
+                        metrics = metric_set(recall, precision, f_meas,accuracy, kap, roc_auc, sens, spec)
+                        )
+
+
+last_fit_fed_rf %>% 
+  collect_metrics()
+
+
+last_fit_fed_rf %>% 
+  pluck(".workflow", 1) %>%   
+  extract_fit_parsnip() %>% 
+  vip(num_features = 10) +
+  labs(title = "Variable Importance (Fed data set)")    
+
+
+last_fit_fed_rf %>%
+  collect_predictions() %>% 
+  conf_mat(cfpb_score_4cat, .pred_class) %>% 
+  autoplot(type = "heatmap") +
+  labs(title = "Confusion Matrix (Fed data set)")
+
+
+
+```
+
+
+
+
+# Conclusion
+	
+The structure of the random forest model dictates using a categorical predictions. To support this model a factor representation of the cfpb score was create with 4 categories. The resulting model has a 0.4720 precision and fails to predict any values score less than 40 or a score over 80.
+	
+	
+	
+	
+	

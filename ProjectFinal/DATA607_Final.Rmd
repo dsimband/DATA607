@@ -745,7 +745,7 @@ ggplot(data = cfpb_results,
 
 
 
-### Machine Learning Model (Random Forest)
+### Random Forest
 
 Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the varaiables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.505. The confusion matrix below depicts that model performance. The model had difficulties predicting cfpb scores values below 40 and above 80.
 
@@ -861,7 +861,7 @@ ggplot(data = fed_results,
 
 ```
 
-### Machine Learning Model (Random Forest)
+### Random Forest
 
 Additional analysis was conduct by creating a random forest machine learning model using parsnip from the tidy models package. The model was based on the variables selected in the previous linear regression model. The full model is available in the DATA607_ML.Rmd file. The resulting model is a categorical model with 4 primary categories for the cfpb score. Even with these broad categories the model reports an accuracy level of 0.468 The confusion matrix below depicts that model performance.
 
@@ -898,14 +898,14 @@ It is interesting that race, gender, education, house hold composition and educa
 There were several challenges associated with this assignment including:
 
 - understanding the data - the survey data is well structured however each code book is 100s of pages describing the individual variables. Understanding the data, selecting the variables and filtering the dataset required a significant amount of analysis and additional reading of associated material from the CFPB and Federal Reserve. 
-- transforming and tiddying the data for each model type - each model type used in the analysis requires descriptive data in a specific format, either numeric or categorical. The machine learning models required some additional analysis to define meaningful categories.
+- transforming and tiddying the data for each model type - each model type used in the analysis requires descriptive data in a specific format, either numeric or categorical. The random forest and neural network models required some additional analysis to define meaningful categories.
 - model selection - efficiently filtering through 100s of survey variable to identify 4 or 5 variables that will construct the mdoel.
 
 
 
 # Conclusion
 
-The linear regression model was more effective than the two machine learning models. The machine learning models struggled to differentiate cases at the high end and the low end of the cfpb score spectrum. 
+The linear regression model was more effective than the two random forest and neural network models. The random forest and neural network models struggled to differentiate cases at the high end and the low end of the cfpb score spectrum. 
 	
 In reviewing the analysis what jumps out is the impact of early decisions on the overall outcome. The technical execution of the analysis is important but early decision on the data to include or exclude in the analysis has a large impact on the shape of the model. This analysis utilized several models with each model generating slightly different results. 
 
